@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crossterm::{cursor, queue, style, terminal};
 
-use crate::game::Pos;
+use crate::game::{Pos, ScreenCoord, ScreenPos};
 
 pub type Dimension = u16;
 
@@ -59,6 +59,17 @@ impl Renderer {
     }
 }
 
+impl Drop for Renderer {
+    fn drop(&mut self) {
+        let _ = queue!(
+            self.stdout,
+            terminal::Clear(terminal::ClearType::All),
+            cursor::MoveTo(0, 0),
+            cursor::Show,
+        );
+    }
+}
+
 pub type Sprite = Vec<Vec<char>>;
 
 pub struct Camera {
@@ -69,25 +80,28 @@ pub struct Camera {
 
 impl Camera {
     pub fn paint_sprite(&self, sprite: &Sprite, pos: Pos, renderer: &mut Renderer) {
-        for y in pos.y..self.pos.y + self.height as i64 {
-            let sprite_y = (y - pos.y) as usize;
+        let sprite_pos = ScreenPos::from(pos - self.pos);
+        let cam_pos = ScreenPos::from(self.pos);
+
+        for y in sprite_pos.y..cam_pos.y + self.height as ScreenCoord {
+            let sprite_y = (y - sprite_pos.y) as usize;
             if sprite_y >= sprite.len() {
                 break;
             }
 
-            for x in pos.x..self.pos.x + self.width as i64 {
-                let sprite_x = (x - pos.x) as usize;
+            for x in sprite_pos.x..cam_pos.x + self.width as ScreenCoord {
+                let sprite_x = (x - sprite_pos.x) as usize;
                 if sprite_x >= sprite[sprite_y].len() {
                     break;
                 }
 
-                let frame_x = x - self.pos.x;
-                let frame_y = y - self.pos.y;
+                let frame_x = x - cam_pos.x;
+                let frame_y = y - cam_pos.y;
 
                 if frame_x >= 0
-                    && frame_x < self.width as i64
+                    && frame_x < self.width as ScreenCoord
                     && frame_y >= 0
-                    && frame_y < self.height as i64
+                    && frame_y < self.height as ScreenCoord
                 {
                     renderer.paint(
                         frame_x as Dimension,
