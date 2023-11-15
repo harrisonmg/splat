@@ -126,8 +126,17 @@ impl Camera {
             }
         }
     }
+
+    pub fn paint_dot(&self, dot: char, pos: Pos, renderer: &mut Renderer) {
+        let dot_pos = ScreenPos::from(pos - self.pos);
+        let cam_pos = ScreenPos::from(self.pos);
+
+        if dot_pos.x >= 0 && dot_pos.x < cam_pos.x + self.width as ScreenCoord {
+            renderer.paint(dot_pos.x as Dimension, dot_pos.y as Dimension, dot);
+        }
+    }
 }
 
 pub trait Drawable {
-    fn draw(camera: &Camera, renderer: &mut Renderer);
+    fn draw(&self, camera: &Camera, renderer: &mut Renderer);
 }

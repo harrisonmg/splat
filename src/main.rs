@@ -2,23 +2,27 @@
 
 use game::{Pos, HEIGHT, UPDATE_INTERVAL, WIDTH};
 use input::Input;
-use render::{Camera, Renderer};
+use player::Player;
+use render::{Camera, Drawable, Renderer};
 
 use crate::input::Button;
 
 mod game;
 mod input;
+mod player;
 mod render;
 
 fn main() -> std::io::Result<()> {
     let mut renderer = Renderer::new(WIDTH, HEIGHT);
     let camera = Camera {
-        pos: Pos::new(5.0, 5.0),
+        pos: Pos::ZERO,
         width: WIDTH,
         height: HEIGHT,
     };
 
     let mut input = Input::new()?;
+
+    let mut player = Player::new();
 
     loop {
         renderer.clear();
@@ -28,7 +32,9 @@ fn main() -> std::io::Result<()> {
             break;
         }
 
-        debug!(renderer, format!("{:?}", input.mouse_pos));
+        player.update(&input);
+
+        player.draw(&camera, &mut renderer);
 
         renderer.render()?;
 
