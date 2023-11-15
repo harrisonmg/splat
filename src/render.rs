@@ -11,6 +11,7 @@ pub struct Renderer {
     height: Dimension,
     frame: Vec<Vec<char>>,
     stdout: std::io::Stdout,
+    debug_msgs: Vec<String>,
 }
 
 impl Renderer {
@@ -22,6 +23,7 @@ impl Renderer {
             height,
             frame: vec![vec![Self::CLEAR_CHAR; height as usize]; width as usize],
             stdout: std::io::stdout(),
+            debug_msgs: Vec::new(),
         }
     }
 
@@ -49,13 +51,25 @@ impl Renderer {
         for x in 0..self.width {
             for y in 0..self.height {
                 let dot = self.frame[x as usize][y as usize];
-                queue!(self.stdout, cursor::MoveTo(x, y), style::Print(dot))?
+                queue!(self.stdout, cursor::MoveTo(x, y), style::Print(dot))?;
+            }
+        }
+
+        if cfg!(debug_assertions) {
+            for msg in self.debug_msgs.drain(..) {
+                queue!(self.stdout, cursor::MoveToNextLine(1), style::Print(msg))?;
             }
         }
 
         self.stdout.flush()?;
 
         Ok(())
+    }
+
+    pub fn debug(&mut self, msg: String) {
+        if cfg!(debug_assertions) {
+            self.debug_msgs.push(msg);
+        }
     }
 }
 

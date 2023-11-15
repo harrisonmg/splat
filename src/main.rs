@@ -13,7 +13,7 @@ mod render;
 fn main() -> std::io::Result<()> {
     let mut renderer = Renderer::new(WIDTH, HEIGHT);
     let camera = Camera {
-        pos: Pos::ZERO,
+        pos: Pos::new(5.0, 5.0),
         width: WIDTH,
         height: HEIGHT,
     };
@@ -23,16 +23,26 @@ fn main() -> std::io::Result<()> {
     loop {
         renderer.clear();
 
-        input.update()?;
+        input.update(&camera)?;
         if input.pressed_this_frame(Button::Quit) {
             break;
         }
 
+        debug!(renderer, format!("{:?}", input.mouse_pos));
+
         renderer.render()?;
-        println!("{:#?}", input.state);
 
         std::thread::sleep(UPDATE_INTERVAL);
     }
 
     Ok(())
+}
+
+#[macro_export]
+macro_rules! debug {
+    ($renderer: ident, $msg: expr) => {
+        if cfg!(debug_assertions) {
+            $renderer.debug($msg);
+        }
+    };
 }

@@ -52,6 +52,14 @@ pub struct ScreenPos {
     pub y: ScreenCoord,
 }
 
+impl ScreenPos {
+    pub const ZERO: Self = Self { x: 0, y: 0 };
+
+    pub fn new(x: ScreenCoord, y: ScreenCoord) -> Self {
+        Self { x, y }
+    }
+}
+
 impl From<Pos> for ScreenPos {
     fn from(value: Pos) -> Self {
         Self {
