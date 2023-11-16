@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use crate::render::Dimension;
 
-pub const WIDTH: Dimension = 100;
-pub const HEIGHT: Dimension = 20;
+pub const WIDTH: Dimension = 120;
+pub const HEIGHT: Dimension = 30;
 pub const UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
 pub type Coord = f32;
@@ -16,6 +16,7 @@ pub struct Pos {
 
 impl Pos {
     pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
+    pub const ONE: Self = Self { x: 1.0, y: 1.0 };
 
     pub fn new(x: Coord, y: Coord) -> Self {
         Self { x, y }
@@ -123,6 +124,7 @@ pub struct ScreenPos {
 
 impl ScreenPos {
     pub const ZERO: Self = Self { x: 0, y: 0 };
+    pub const ONE: Self = Self { x: 1, y: 1 };
 
     pub fn new(x: ScreenCoord, y: ScreenCoord) -> Self {
         Self { x, y }
@@ -132,8 +134,8 @@ impl ScreenPos {
 impl From<Pos> for ScreenPos {
     fn from(value: Pos) -> Self {
         Self {
-            x: value.x as ScreenCoord,
-            y: (value.y / 2.0) as ScreenCoord,
+            x: value.x.round() as ScreenCoord,
+            y: (value.y / 2.0).round() as ScreenCoord,
         }
     }
 }
@@ -144,5 +146,77 @@ impl From<ScreenPos> for Pos {
             x: value.x as Coord,
             y: (value.y * 2) as Coord,
         }
+    }
+}
+
+impl std::ops::Add for ScreenPos {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl std::ops::AddAssign for ScreenPos {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl std::ops::Sub for ScreenPos {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
+    }
+}
+
+impl std::ops::SubAssign for ScreenPos {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
+impl std::ops::Mul for ScreenPos {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+        }
+    }
+}
+
+impl std::ops::MulAssign for ScreenPos {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.x *= rhs.x;
+        self.y *= rhs.y;
+    }
+}
+
+impl std::ops::Div for ScreenPos {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x / rhs.x,
+            y: self.y / rhs.y,
+        }
+    }
+}
+
+impl std::ops::DivAssign for ScreenPos {
+    fn div_assign(&mut self, rhs: Self) {
+        self.x /= rhs.x;
+        self.y /= rhs.y;
     }
 }

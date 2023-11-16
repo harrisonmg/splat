@@ -1,2 +1,1 @@
-* border
 * ray marching

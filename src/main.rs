@@ -11,7 +11,13 @@ use stage::Stage;
 
 use crate::input::Button;
 
-automod::dir!("src/");
+mod border;
+mod game;
+mod input;
+mod player;
+mod ray;
+mod render;
+mod stage;
 
 fn main() -> std::io::Result<()> {
     let mut renderer = Renderer::new(WIDTH, HEIGHT);
@@ -42,11 +48,11 @@ fn main() -> std::io::Result<()> {
 
         player.update(&input);
 
+        debug!(renderer, format!("input.mouse_pos: {:?}", input.mouse_pos));
+
         stage.draw(&camera, &mut renderer);
         player.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
-
-        debug!(renderer, format!("{:?}", input.mouse_pos));
 
         renderer.render()?;
 
