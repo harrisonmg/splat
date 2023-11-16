@@ -20,6 +20,25 @@ impl Pos {
     pub fn new(x: Coord, y: Coord) -> Self {
         Self { x, y }
     }
+
+    pub fn scale(&self, scalar: Coord) -> Self {
+        Self {
+            x: self.x * scalar,
+            y: self.y * scalar,
+        }
+    }
+
+    pub fn magnitude(&self) -> Coord {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+
+    pub fn normalize(&self) -> Self {
+        let mag = self.magnitude();
+        Self {
+            x: self.x / mag,
+            y: self.y / mag,
+        }
+    }
 }
 
 impl std::ops::Add for Pos {
@@ -33,6 +52,13 @@ impl std::ops::Add for Pos {
     }
 }
 
+impl std::ops::AddAssign for Pos {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
 impl std::ops::Sub for Pos {
     type Output = Self;
 
@@ -41,6 +67,49 @@ impl std::ops::Sub for Pos {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
         }
+    }
+}
+
+impl std::ops::SubAssign for Pos {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
+impl std::ops::Mul for Pos {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+        }
+    }
+}
+
+impl std::ops::MulAssign for Pos {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.x *= rhs.x;
+        self.y *= rhs.y;
+    }
+}
+
+impl std::ops::Div for Pos {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x / rhs.x,
+            y: self.y / rhs.y,
+        }
+    }
+}
+
+impl std::ops::DivAssign for Pos {
+    fn div_assign(&mut self, rhs: Self) {
+        self.x /= rhs.x;
+        self.y /= rhs.y;
     }
 }
 
@@ -64,7 +133,16 @@ impl From<Pos> for ScreenPos {
     fn from(value: Pos) -> Self {
         Self {
             x: value.x as ScreenCoord,
-            y: value.y as ScreenCoord,
+            y: (value.y / 2.0) as ScreenCoord,
+        }
+    }
+}
+
+impl From<ScreenPos> for Pos {
+    fn from(value: ScreenPos) -> Self {
+        Self {
+            x: value.x as Coord,
+            y: (value.y * 2) as Coord,
         }
     }
 }

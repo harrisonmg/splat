@@ -15,7 +15,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    const CLEAR_CHAR: char = '-';
+    const CLEAR_CHAR: char = ' ';
 
     pub fn new(width: Dimension, height: u16) -> Self {
         Self {
@@ -25,6 +25,14 @@ impl Renderer {
             stdout: std::io::stdout(),
             debug_msgs: Vec::new(),
         }
+    }
+
+    pub fn width(&self) -> Dimension {
+        self.width
+    }
+
+    pub fn height(&self) -> Dimension {
+        self.height
     }
 
     pub fn paint(&mut self, frame_x: Dimension, frame_y: Dimension, dot: char) {
@@ -88,6 +96,7 @@ pub type Sprite = Vec<Vec<char>>;
 
 pub struct Camera {
     pub pos: Pos,
+    pub frame_pos: ScreenPos,
     pub width: Dimension,
     pub height: Dimension,
 }
@@ -118,8 +127,8 @@ impl Camera {
                     && frame_y < self.height as ScreenCoord
                 {
                     renderer.paint(
-                        frame_x as Dimension,
-                        frame_y as Dimension,
+                        (self.frame_pos.x + frame_x) as Dimension,
+                        (self.frame_pos.y + frame_y) as Dimension,
                         sprite[sprite_y][sprite_x],
                     );
                 }

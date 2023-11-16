@@ -24,7 +24,12 @@ impl Player {
         let speed = 50.0;
 
         if input.pressed(Button::RightMouse) {
-            self.pos += speed * UPDATE_INTERVAL.as_secs_f32();
+            let diff = input.mouse_pos - self.pos;
+            if diff.magnitude() > 1.0 {
+                self.pos += diff
+                    .normalize()
+                    .scale(speed * UPDATE_INTERVAL.as_secs_f32());
+            }
         }
     }
 }

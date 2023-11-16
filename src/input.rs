@@ -9,7 +9,10 @@ use crossterm::{
     execute, queue, terminal,
 };
 
-use crate::{game::Pos, render::Camera};
+use crate::{
+    game::{Pos, ScreenPos},
+    render::Camera,
+};
 
 /// Only LeftMouse and RightMouse actually support release events,
 /// at least in WSL + Windows Terminal. Keyboard keys with just toggle
@@ -149,8 +152,8 @@ impl Input {
                     }
                 }
                 Event::Mouse(mouse_event) => {
-                    self.mouse_pos =
-                        Pos::new(mouse_event.column.into(), mouse_event.row.into()) + camera.pos;
+                    self.mouse_pos = camera.pos
+                        + ScreenPos::new(mouse_event.column.into(), mouse_event.row.into()).into();
 
                     if let Some(button) = Button::from_mouse_event(&mouse_event) {
                         match mouse_event.kind {

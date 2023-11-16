@@ -1,26 +1,34 @@
 #![allow(dead_code)]
 
-use game::{Pos, HEIGHT, UPDATE_INTERVAL, WIDTH};
+use std::path::Path;
+
+use border::Border;
+use game::{Pos, ScreenPos, HEIGHT, UPDATE_INTERVAL, WIDTH};
 use input::Input;
 use player::Player;
 use render::{Camera, Drawable, Renderer};
+use stage::Stage;
 
 use crate::input::Button;
 
-mod game;
-mod input;
-mod player;
-mod render;
+automod::dir!("src/");
 
 fn main() -> std::io::Result<()> {
     let mut renderer = Renderer::new(WIDTH, HEIGHT);
+
+    // leave room for border and status bar
     let camera = Camera {
         pos: Pos::ZERO,
-        width: WIDTH,
-        height: HEIGHT,
+        frame_pos: ScreenPos::new(1, 1),
+        width: WIDTH - 2,
+        height: HEIGHT - 3,
     };
 
+    let border = Border;
+
     let mut input = Input::new()?;
+
+    let stage = Stage::load(&Path::new("test.stage"))?;
 
     let mut player = Player::new();
 
@@ -34,7 +42,11 @@ fn main() -> std::io::Result<()> {
 
         player.update(&input);
 
+        stage.draw(&camera, &mut renderer);
         player.draw(&camera, &mut renderer);
+        border.draw(&camera, &mut renderer);
+
+        debug!(renderer, format!("{:?}", input.mouse_pos));
 
         renderer.render()?;
 
