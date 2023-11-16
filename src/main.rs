@@ -3,7 +3,8 @@
 use std::path::Path;
 
 use border::Border;
-use game::{Pos, ScreenPos, HEIGHT, UPDATE_INTERVAL, WIDTH};
+use crossterm::terminal;
+use game::{Pos, ScreenPos, UPDATE_INTERVAL};
 use input::Input;
 use player::Player;
 use render::{Camera, Drawable, Renderer};
@@ -20,14 +21,18 @@ mod render;
 mod stage;
 
 fn main() -> std::io::Result<()> {
-    let mut renderer = Renderer::new(WIDTH, HEIGHT);
+    let size = terminal::window_size()?;
+    let width = size.columns;
+    let height = size.rows / 2;
+
+    let mut renderer = Renderer::new(width, height);
 
     // leave room for border and status bar
     let camera = Camera {
         pos: Pos::ZERO,
         frame_pos: ScreenPos::new(1, 1),
-        width: WIDTH - 2,
-        height: HEIGHT - 3,
+        width: width - 2,
+        height: height - 3,
     };
 
     let border = Border;
