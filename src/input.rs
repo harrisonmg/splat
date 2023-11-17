@@ -152,8 +152,10 @@ impl Input {
                     }
                 }
                 Event::Mouse(mouse_event) => {
-                    self.mouse_pos = camera.pos
-                        + ScreenPos::new(mouse_event.column.into(), mouse_event.row.into()).into();
+                    let mouse_pos =
+                        ScreenPos::new(mouse_event.column.into(), mouse_event.row.into())
+                            - camera.frame_pos;
+                    self.mouse_pos = camera.pos + mouse_pos.into();
 
                     if let Some(button) = Button::from_mouse_event(&mouse_event) {
                         match mouse_event.kind {

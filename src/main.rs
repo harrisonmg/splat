@@ -25,7 +25,7 @@ fn main() -> std::io::Result<()> {
     let width = size.columns;
     let height = size.rows / 2;
 
-    let mut renderer = Renderer::new(width, height);
+    let mut renderer = Renderer::new(width, height)?;
 
     // leave room for border and status bar
     let camera = Camera {

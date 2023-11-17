@@ -10,17 +10,26 @@ pub struct Ray {
 }
 
 impl Ray {
-    /// Returns an iterator of screen positions starting from the ray start pos until the end
-    pub fn march(&self) -> impl Iterator<Item = ScreenPos> {
-        let heading = self.end - self.start;
-        let step = heading.normalize();
+    /// Returns an iterator of positions starting from the ray start pos until the end, in
+    /// increments of the smaller dimension of single screen dot.
+    pub fn march(&self) -> impl Iterator<Item = Pos> {
+        let heading = (self.end - self.start).normalize();
+        let dot_size = Pos::from(ScreenPos::ONE);
+        let step = heading.scale(dot_size.x.min(dot_size.y));
+
         let mut pos = self.start;
-        let mut path = vec![pos.into()];
+        let mut path = vec![pos];
         let full_mag = (self.end - self.start).magnitude();
+
         while (pos - self.start).magnitude() < full_mag {
             pos += step;
-            path.push(pos.into());
+            path.push(pos);
         }
+
+        if let Some(last) = path.last_mut() {
+            *last = self.end;
+        }
+
         path.into_iter()
     }
 }

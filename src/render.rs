@@ -17,14 +17,22 @@ pub struct Renderer {
 impl Renderer {
     const CLEAR_CHAR: char = ' ';
 
-    pub fn new(width: Dimension, height: u16) -> Self {
-        Self {
+    pub fn new(width: Dimension, height: u16) -> std::io::Result<Self> {
+        let mut stdout = std::io::stdout();
+
+        queue!(
+            stdout,
+            cursor::Hide,
+            terminal::Clear(terminal::ClearType::All)
+        )?;
+
+        Ok(Self {
             width,
             height,
             frame: vec![vec![Self::CLEAR_CHAR; height as usize]; width as usize],
-            stdout: std::io::stdout(),
+            stdout,
             debug_msgs: Vec::new(),
-        }
+        })
     }
 
     pub fn width(&self) -> Dimension {
@@ -50,12 +58,6 @@ impl Renderer {
     }
 
     pub fn render(&mut self) -> std::io::Result<()> {
-        queue!(
-            self.stdout,
-            cursor::Hide,
-            terminal::Clear(terminal::ClearType::All)
-        )?;
-
         for x in 0..self.width {
             for y in 0..self.height {
                 let dot = self.frame[x as usize][y as usize];
@@ -64,6 +66,10 @@ impl Renderer {
         }
 
         if cfg!(debug_assertions) {
+            queue!(
+                self.stdout,
+                terminal::Clear(terminal::ClearType::FromCursorDown),
+            )?;
             for msg in self.debug_msgs.drain(..) {
                 queue!(self.stdout, cursor::MoveToNextLine(1), style::Print(msg))?;
             }
@@ -140,8 +146,16 @@ impl Camera {
         let dot_pos = ScreenPos::from(pos - self.pos);
         let cam_pos = ScreenPos::from(self.pos);
 
-        if dot_pos.x >= 0 && dot_pos.x < cam_pos.x + self.width as ScreenCoord {
-            renderer.paint(dot_pos.x as Dimension, dot_pos.y as Dimension, dot);
+        if dot_pos.x >= 0
+            && dot_pos.x < cam_pos.x + self.width as ScreenCoord
+            && dot_pos.y >= 0
+            && dot_pos.y < cam_pos.y + self.height as ScreenCoord
+        {
+            renderer.paint(
+                (self.frame_pos.x + dot_pos.x) as Dimension,
+                (self.frame_pos.y + dot_pos.y) as Dimension,
+                dot,
+            );
         }
     }
 }

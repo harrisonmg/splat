@@ -9,18 +9,23 @@ use crate::{
 pub struct Player {
     pos: Pos,
     sprite: Sprite,
-    ray: Option<Ray>,
+    ray: Ray,
 }
 
 impl Player {
     pub fn new() -> Self {
+        let pos = Pos {
+            x: WIDTH as Coord / 2.0 - 2.0,
+            y: HEIGHT as Coord / 2.0 - 1.0,
+        };
         Self {
-            pos: Pos {
-                x: WIDTH as Coord / 2.0 - 2.0,
-                y: HEIGHT as Coord / 2.0 - 1.0,
+            pos,
+            //sprite: vec![vec!['╭', '╮'], vec!['╰', '╯']],
+            sprite: vec![vec!['█']],
+            ray: Ray {
+                start: pos,
+                end: pos,
             },
-            sprite: vec![vec!['╭', '╮'], vec!['╰', '╯']],
-            ray: None,
         }
     }
 
@@ -29,26 +34,29 @@ impl Player {
 
         if input.pressed(Button::RightMouse) {
             let diff = input.mouse_pos - self.pos;
-            if diff.magnitude() > 1.0 {
-                self.pos += diff
+            if diff.magnitude() > 0.0 {
+                let full_step = diff
                     .normalize()
                     .scale(speed * UPDATE_INTERVAL.as_secs_f32());
+                self.pos += if diff.magnitude() < full_step.magnitude() {
+                    diff
+                } else {
+                    full_step
+                };
             }
         }
 
-        self.ray = Some(Ray {
+        self.ray = Ray {
             start: self.pos,
             end: input.mouse_pos,
-        });
+        };
     }
 }
 
 impl Drawable for Player {
     fn draw(&self, camera: &crate::render::Camera, renderer: &mut crate::render::Renderer) {
-        camera.paint_sprite(&self.sprite, self.pos, renderer);
         debug!(renderer, format!("player.pos: {:?}", self.pos));
-        if let Some(ray) = self.ray.as_ref() {
-            ray.draw(camera, renderer);
-        }
+        self.ray.draw(camera, renderer);
+        camera.paint_sprite(&self.sprite, self.pos, renderer);
     }
 }
