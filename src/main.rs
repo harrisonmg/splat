@@ -1,31 +1,23 @@
 #![allow(dead_code)]
 
-use std::path::Path;
+use std::{path::Path, time::Duration};
 
-use border::Border;
 use crossterm::terminal;
-use game::{Pos, ScreenPos, UPDATE_INTERVAL};
-use input::Input;
-use player::Player;
-use render::{Camera, Drawable, Renderer};
-use stage::Stage;
 
-use crate::input::Button;
+use engine::{Animation, Button, Camera, Drawable, Input, Pos, Renderer, ScreenPos};
+use game::{Border, Player, Stage, World};
 
-mod border;
+mod engine;
 mod game;
-mod input;
-mod player;
-mod ray;
-mod render;
-mod stage;
+
+pub const UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
 fn main() -> std::io::Result<()> {
     let size = terminal::window_size()?;
     let width = size.columns;
     let height = size.rows / 2;
 
-    let mut renderer = Renderer::new(width, height)?;
+    let renderer = Renderer::new(width, height)?;
 
     // leave room for border and status bar
     let camera = Camera {
@@ -35,43 +27,43 @@ fn main() -> std::io::Result<()> {
         height: height - 3,
     };
 
+    let input = Input::new()?;
+    let stage = Stage::load(Path::new("test.stage"))?;
+
+    let mut world = World {
+        update_interval: UPDATE_INTERVAL,
+        renderer,
+        camera,
+        input,
+        stage,
+    };
+
     let border = Border;
-
-    let mut input = Input::new()?;
-
-    let stage = Stage::load(&Path::new("test.stage"))?;
-
     let mut player = Player::new();
 
     loop {
-        renderer.clear();
+        world.renderer.clear();
 
-        input.update(&camera)?;
-        if input.pressed_this_frame(Button::Quit) {
+        world.update()?;
+        if world.input.pressed_this_frame(Button::Quit) {
             break;
         }
 
-        player.update(&input);
+        player.update(&world);
 
-        debug!(renderer, format!("input.mouse_pos: {:?}", input.mouse_pos));
+        world.stage.draw(&world.camera, &mut world.renderer);
 
-        stage.draw(&camera, &mut renderer);
-        player.draw(&camera, &mut renderer);
-        border.draw(&camera, &mut renderer);
+        world
+            .camera
+            .paint_sprite(anim.get_frame(), Pos::ZERO, &mut world.renderer);
 
-        renderer.render()?;
+        player.draw(&world.camera, &mut world.renderer);
+        border.draw(&world.camera, &mut world.renderer);
 
-        std::thread::sleep(UPDATE_INTERVAL);
+        world.renderer.render()?;
+
+        std::thread::sleep(world.update_interval);
     }
 
     Ok(())
-}
-
-#[macro_export]
-macro_rules! debug {
-    ($renderer: ident, $msg: expr) => {
-        if cfg!(debug_assertions) {
-            $renderer.debug($msg);
-        }
-    };
 }

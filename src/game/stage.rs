@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use crate::{game::Pos, render::Drawable};
+use crate::engine::{Drawable, Pos};
 
 pub struct Stage {
     data: Vec<Vec<char>>,
@@ -22,7 +22,7 @@ impl Stage {
 }
 
 impl Drawable for Stage {
-    fn draw(&self, camera: &crate::render::Camera, renderer: &mut crate::render::Renderer) {
+    fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
         camera.paint_sprite(&self.data, Pos::ZERO, renderer);
     }
 }

@@ -1,4 +1,4 @@
-use crate::game::{Pos, ScreenPos};
+use super::{Pos, ScreenPos};
 
 impl std::ops::Add for Pos {
     type Output = Self;

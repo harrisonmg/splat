@@ -9,10 +9,7 @@ use crossterm::{
     execute, queue, terminal,
 };
 
-use crate::{
-    game::{Pos, ScreenPos},
-    render::Camera,
-};
+use crate::engine::{Camera, Pos, ScreenPos};
 
 /// Only LeftMouse and RightMouse actually support release events,
 /// at least in WSL + Windows Terminal. Keyboard keys with just toggle
@@ -99,32 +96,30 @@ impl Input {
         })
     }
 
+    pub fn button_state(&self, button: Button) -> ButtonState {
+        *self.state.get(&button).unwrap_or(&ButtonState::Released)
+    }
+
     pub fn pressed(&self, button: Button) -> bool {
-        match *self.state.get(&button).unwrap_or(&ButtonState::Released) {
-            ButtonState::PressedThisFrame | ButtonState::Pressed => true,
-            _ => false,
-        }
+        matches!(
+            self.button_state(button),
+            ButtonState::PressedThisFrame | ButtonState::Pressed
+        )
     }
 
     pub fn pressed_this_frame(&self, button: Button) -> bool {
-        match *self.state.get(&button).unwrap_or(&ButtonState::Released) {
-            ButtonState::PressedThisFrame => true,
-            _ => false,
-        }
+        matches!(self.button_state(button), ButtonState::PressedThisFrame)
     }
 
     pub fn released(&self, button: Button) -> bool {
-        match *self.state.get(&button).unwrap_or(&ButtonState::Released) {
-            ButtonState::ReleasedThisFrame | ButtonState::Released => true,
-            _ => false,
-        }
+        matches!(
+            self.button_state(button),
+            ButtonState::ReleasedThisFrame | ButtonState::Released
+        )
     }
 
     pub fn released_this_frame(&self, button: Button) -> bool {
-        match *self.state.get(&button).unwrap_or(&ButtonState::Released) {
-            ButtonState::ReleasedThisFrame => true,
-            _ => false,
-        }
+        matches!(self.button_state(button), ButtonState::ReleasedThisFrame)
     }
 
     pub fn update(&mut self, camera: &Camera) -> std::io::Result<()> {

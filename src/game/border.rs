@@ -1,4 +1,4 @@
-use crate::render::Drawable;
+use crate::engine::Drawable;
 
 pub struct Border;
 
@@ -12,7 +12,7 @@ impl Border {
 }
 
 impl Drawable for Border {
-    fn draw(&self, camera: &crate::render::Camera, renderer: &mut crate::render::Renderer) {
+    fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
         let width = camera.width + 1;
         let height = camera.height + 1;
 

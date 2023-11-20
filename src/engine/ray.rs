@@ -1,7 +1,6 @@
 use crate::{
     debug,
-    game::{Pos, ScreenPos},
-    render::Drawable,
+    engine::{Drawable, Pos, ScreenPos},
 };
 
 pub struct Ray {
@@ -10,9 +9,9 @@ pub struct Ray {
 }
 
 impl Ray {
-    /// Returns an iterator of positions starting from the ray start pos until the end, in
+    /// Returns a vec of positions starting from the ray start pos until the end, in
     /// increments of the smaller dimension of single screen dot.
-    pub fn march(&self) -> impl Iterator<Item = Pos> {
+    pub fn march(&self) -> Vec<Pos> {
         let heading = (self.end - self.start).normalize();
         let dot_size = Pos::from(ScreenPos::ONE);
         let step = heading.scale(dot_size.x.min(dot_size.y));
@@ -30,14 +29,14 @@ impl Ray {
             *last = self.end;
         }
 
-        path.into_iter()
+        path
     }
 }
 
 impl Drawable for Ray {
-    fn draw(&self, camera: &crate::render::Camera, renderer: &mut crate::render::Renderer) {
+    fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
         for step in self.march() {
-            camera.paint_dot('*', step.into(), renderer);
+            camera.paint_dot('*', step, renderer);
             debug!(renderer, format!("ray step: {:?}", step))
         }
     }
