@@ -1,3 +1,6 @@
+mod constants;
+pub use constants::*;
+
 mod border;
 pub use border::*;
 
@@ -7,8 +10,5 @@ pub use stage::*;
 mod player;
 pub use player::*;
 
-mod world;
-pub use world::*;
-
-mod rope;
-pub use rope::*;
+mod chain;
+pub use chain::*;

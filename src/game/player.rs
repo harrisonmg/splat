@@ -1,14 +1,14 @@
 use crate::{
     debug,
-    engine::{Button, Drawable, Pos, Ray, Sprite},
+    engine::{Button, Drawable, Input, Pos, Ray, Sprite},
 };
 
-use super::{Rope, World};
+use super::{Chain, UPDATE_INTERVAL};
 
 pub struct Player {
     pos: Pos,
     sprite: Sprite,
-    rope: Option<Rope>,
+    chain: Option<Chain>,
 }
 
 impl Player {
@@ -17,19 +17,19 @@ impl Player {
             pos: Pos::ZERO,
             //sprite: vec![vec!['╭', '╮'], vec!['╰', '╯']],
             sprite: vec![vec!['█']],
-            rope: None,
+            chain: None,
         }
     }
 
-    pub fn update(&mut self, world: &World) {
+    pub fn update(&mut self, input: &Input) {
         let speed = 50.0;
 
-        if world.input.pressed(Button::RightMouse) {
-            let diff = world.input.mouse_pos - self.pos;
+        if input.pressed(Button::RightMouse) {
+            let diff = input.mouse_pos - self.pos;
             if diff.magnitude() > 0.0 {
                 let full_step = diff
                     .normalize()
-                    .scale(speed * world.update_interval.as_secs_f32());
+                    .scale(speed * UPDATE_INTERVAL.as_secs_f32());
                 self.pos += if diff.magnitude() < full_step.magnitude() {
                     diff
                 } else {
@@ -38,13 +38,15 @@ impl Player {
             }
         }
 
-        if world.input.pressed_this_frame(Button::LeftMouse) {
-            self.rope = Some(Rope::new(Ray {
+        if input.pressed_this_frame(Button::LeftMouse) {
+            self.chain = Some(Chain::new(Ray {
                 start: self.pos,
-                end: world.input.mouse_pos,
+                end: input.mouse_pos,
             }));
-        } else if world.input.released(Button::LeftMouse) {
-            self.rope = None;
+        } else if input.released(Button::LeftMouse) {
+            self.chain = None;
+        } else if let Some(chain) = self.chain.as_mut() {
+            chain.update();
         }
     }
 }
@@ -52,8 +54,8 @@ impl Player {
 impl Drawable for Player {
     fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
         debug!(renderer, format!("player.pos: {:?}", self.pos));
-        if let Some(rope) = self.rope {
-            rope.draw(camera, renderer);
+        if let Some(chain) = self.chain.as_ref() {
+            chain.draw(camera, renderer);
         }
         camera.paint_sprite(&self.sprite, self.pos, renderer);
     }

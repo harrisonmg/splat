@@ -1,23 +1,21 @@
 #![allow(dead_code)]
 
-use std::{path::Path, time::Duration};
+use std::path::Path;
 
 use crossterm::terminal;
 
-use engine::{Animation, Button, Camera, Drawable, Input, Pos, Renderer, ScreenPos};
-use game::{Border, Player, Stage, World};
+use engine::{Button, Camera, Drawable, Input, Pos, Renderer, ScreenPos};
+use game::{Border, Player, Stage, UPDATE_INTERVAL};
 
 mod engine;
 mod game;
-
-pub const UPDATE_INTERVAL: Duration = Duration::from_millis(10);
 
 fn main() -> std::io::Result<()> {
     let size = terminal::window_size()?;
     let width = size.columns;
     let height = size.rows / 2;
 
-    let renderer = Renderer::new(width, height)?;
+    let mut renderer = Renderer::new(width, height)?;
 
     // leave room for border and status bar
     let camera = Camera {
@@ -27,42 +25,30 @@ fn main() -> std::io::Result<()> {
         height: height - 3,
     };
 
-    let input = Input::new()?;
+    let mut input = Input::new()?;
     let stage = Stage::load(Path::new("test.stage"))?;
-
-    let mut world = World {
-        update_interval: UPDATE_INTERVAL,
-        renderer,
-        camera,
-        input,
-        stage,
-    };
 
     let border = Border;
     let mut player = Player::new();
 
     loop {
-        world.renderer.clear();
+        renderer.clear();
 
-        world.update()?;
-        if world.input.pressed_this_frame(Button::Quit) {
+        input.update(&camera)?;
+        if input.pressed_this_frame(Button::Quit) {
             break;
         }
 
-        player.update(&world);
+        player.update(&input);
 
-        world.stage.draw(&world.camera, &mut world.renderer);
+        stage.draw(&camera, &mut renderer);
 
-        world
-            .camera
-            .paint_sprite(anim.get_frame(), Pos::ZERO, &mut world.renderer);
+        player.draw(&camera, &mut renderer);
+        border.draw(&camera, &mut renderer);
 
-        player.draw(&world.camera, &mut world.renderer);
-        border.draw(&world.camera, &mut world.renderer);
+        renderer.render()?;
 
-        world.renderer.render()?;
-
-        std::thread::sleep(world.update_interval);
+        std::thread::sleep(UPDATE_INTERVAL);
     }
 
     Ok(())
