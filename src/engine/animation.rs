@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::game::UPDATE_INTERVAL;
 
@@ -23,7 +23,7 @@ impl Animation {
         }
     }
 
-    pub fn get_frame(&mut self) -> &Sprite {
+    pub fn update(&mut self) {
         match self.frame_time_left.checked_sub(UPDATE_INTERVAL) {
             Some(time) => self.frame_time_left = time,
             None => {
@@ -35,7 +35,9 @@ impl Animation {
                 }
             }
         }
+    }
 
+    pub fn get_frame(&self) -> &Sprite {
         &self.frames[self.current_frame]
     }
 

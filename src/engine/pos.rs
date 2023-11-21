@@ -1,5 +1,21 @@
 pub type Coord = f32;
 
+pub trait Signed: Copy {
+    fn sign(self) -> Self;
+}
+
+impl Signed for Coord {
+    fn sign(self) -> Self {
+        if self > 0.0 {
+            1.0
+        } else if self < 0.0 {
+            -1.0
+        } else {
+            0.0
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Pos {
     pub x: Coord,
@@ -10,7 +26,7 @@ impl Pos {
     pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
     pub const ONE: Self = Self { x: 1.0, y: 1.0 };
 
-    pub fn new(x: Coord, y: Coord) -> Self {
+    pub const fn new(x: Coord, y: Coord) -> Self {
         Self { x, y }
     }
 

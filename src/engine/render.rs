@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crossterm::{cursor, queue, style, terminal};
 
-use super::Camera;
+use super::{Camera, Logger};
 
 pub type Dimension = u16;
 
@@ -11,13 +11,17 @@ pub struct Renderer {
     height: Dimension,
     frame: Vec<Vec<char>>,
     stdout: std::io::Stdout,
-    debug_msgs: Vec<String>,
+    logger: Option<&'static Logger>,
 }
 
 impl Renderer {
     const CLEAR_CHAR: char = ' ';
 
-    pub fn new(width: Dimension, height: u16) -> std::io::Result<Self> {
+    pub fn new(
+        width: Dimension,
+        height: Dimension,
+        logger: Option<&'static Logger>,
+    ) -> std::io::Result<Self> {
         let mut stdout = std::io::stdout();
 
         queue!(
@@ -26,12 +30,16 @@ impl Renderer {
             terminal::Clear(terminal::ClearType::All)
         )?;
 
+        if let Some(logger) = logger.as_ref() {
+            logger.drain();
+        }
+
         Ok(Self {
             width,
             height,
             frame: vec![vec![Self::CLEAR_CHAR; height as usize]; width as usize],
             stdout,
-            debug_msgs: Vec::new(),
+            logger,
         })
     }
 
@@ -65,25 +73,20 @@ impl Renderer {
             }
         }
 
-        if cfg!(debug_assertions) {
-            queue!(
-                self.stdout,
-                terminal::Clear(terminal::ClearType::FromCursorDown),
-            )?;
-            for msg in self.debug_msgs.drain(..) {
-                queue!(self.stdout, cursor::MoveToNextLine(1), style::Print(msg))?;
+        if let Some(logger) = self.logger {
+            for msg in logger.drain() {
+                queue!(
+                    self.stdout,
+                    cursor::MoveToNextLine(1),
+                    style::Print(msg),
+                    terminal::Clear(terminal::ClearType::UntilNewLine)
+                )?;
             }
         }
 
         self.stdout.flush()?;
 
         Ok(())
-    }
-
-    pub fn debug(&mut self, msg: String) {
-        if cfg!(debug_assertions) {
-            self.debug_msgs.push(msg);
-        }
     }
 }
 
@@ -102,13 +105,4 @@ pub type Sprite = Vec<Vec<char>>;
 
 pub trait Drawable {
     fn draw(&self, camera: &Camera, renderer: &mut Renderer);
-}
-
-#[macro_export]
-macro_rules! debug {
-    ($renderer: ident, $msg: expr) => {
-        if cfg!(debug_assertions) {
-            $renderer.debug($msg);
-        }
-    };
 }

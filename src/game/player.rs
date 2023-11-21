@@ -1,13 +1,12 @@
-use crate::{
-    debug,
-    engine::{Button, Drawable, Input, Pos, Ray, Sprite},
-};
+use crate::engine::{Button, Drawable, Input, Pos, Ray, Signed};
 
 use super::{Chain, UPDATE_INTERVAL};
 
+pub const GRAVITY: Pos = Pos::new(0.0, 200.0);
+
 pub struct Player {
     pos: Pos,
-    sprite: Sprite,
+    vel: Pos,
     chain: Option<Chain>,
 }
 
@@ -15,29 +14,12 @@ impl Player {
     pub fn new() -> Self {
         Self {
             pos: Pos::ZERO,
-            //sprite: vec![vec!['╭', '╮'], vec!['╰', '╯']],
-            sprite: vec![vec!['█']],
+            vel: Pos::ZERO,
             chain: None,
         }
     }
 
     pub fn update(&mut self, input: &Input) {
-        let speed = 50.0;
-
-        if input.pressed(Button::RightMouse) {
-            let diff = input.mouse_pos - self.pos;
-            if diff.magnitude() > 0.0 {
-                let full_step = diff
-                    .normalize()
-                    .scale(speed * UPDATE_INTERVAL.as_secs_f32());
-                self.pos += if diff.magnitude() < full_step.magnitude() {
-                    diff
-                } else {
-                    full_step
-                };
-            }
-        }
-
         if input.pressed_this_frame(Button::LeftMouse) {
             self.chain = Some(Chain::new(Ray {
                 start: self.pos,
@@ -46,17 +28,43 @@ impl Player {
         } else if input.released(Button::LeftMouse) {
             self.chain = None;
         } else if let Some(chain) = self.chain.as_mut() {
-            chain.update();
+            if chain.deployed() {
+                *chain = Chain::new_deployed(Ray {
+                    start: self.pos,
+                    end: chain.ray.end,
+                });
+            } else {
+                chain.update();
+            }
         }
+
+        self.vel += GRAVITY.scale(UPDATE_INTERVAL.as_secs_f32());
+
+        if input.pressed(Button::RightMouse) {
+            self.pos = input.mouse_pos;
+            self.vel = Pos::ZERO;
+        } else if let Some(chain) = self.chain.as_ref() {
+            let chain_dir = chain.ray.direction();
+            let chain_tan = Pos::new(chain_dir.y, -chain_dir.x);
+
+            let vel_trans = Pos::new(
+                chain_dir.x * self.vel.x + chain_tan.x * self.vel.y,
+                chain_dir.y * self.vel.x + chain_tan.y * self.vel.y,
+            );
+
+            let vel_dir = vel_trans.y.sign();
+            self.vel = chain_tan.scale(self.vel.magnitude() * vel_dir);
+        }
+
+        self.pos += self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
     }
 }
 
 impl Drawable for Player {
     fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
-        debug!(renderer, format!("player.pos: {:?}", self.pos));
         if let Some(chain) = self.chain.as_ref() {
             chain.draw(camera, renderer);
         }
-        camera.paint_sprite(&self.sprite, self.pos, renderer);
+        camera.paint_dot('O', self.pos, renderer);
     }
 }

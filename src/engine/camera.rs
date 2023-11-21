@@ -32,10 +32,15 @@ impl Camera {
                     && frame_y >= 0
                     && frame_y < self.height as ScreenCoord
                 {
+                    let dot = sprite[sprite_y][sprite_x];
+                    if dot.is_whitespace() {
+                        continue;
+                    }
+
                     renderer.paint(
                         (self.frame_pos.x + frame_x) as Dimension,
                         (self.frame_pos.y + frame_y) as Dimension,
-                        sprite[sprite_y][sprite_x],
+                        dot,
                     );
                 }
             }

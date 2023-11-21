@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crossterm::terminal;
 
-use engine::{Button, Camera, Drawable, Input, Pos, Renderer, ScreenPos};
+use engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
 use game::{Border, Player, Stage, UPDATE_INTERVAL};
 
 mod engine;
@@ -15,7 +15,8 @@ fn main() -> std::io::Result<()> {
     let width = size.columns;
     let height = size.rows / 2;
 
-    let mut renderer = Renderer::new(width, height)?;
+    let logger = Logger::setup().unwrap();
+    let mut renderer = Renderer::new(width, height, Some(logger))?;
 
     // leave room for border and status bar
     let camera = Camera {
@@ -31,8 +32,12 @@ fn main() -> std::io::Result<()> {
     let border = Border;
     let mut player = Player::new();
 
+    // use spin_sleep since native sleep is often too slow / low res
+    let rate = 1.0 / UPDATE_INTERVAL.as_secs_f64();
+    let mut loop_helper = spin_sleep::LoopHelper::builder().build_with_target_rate(rate);
+
     loop {
-        renderer.clear();
+        loop_helper.loop_start();
 
         input.update(&camera)?;
         if input.pressed_this_frame(Button::Quit) {
@@ -41,14 +46,15 @@ fn main() -> std::io::Result<()> {
 
         player.update(&input);
 
-        stage.draw(&camera, &mut renderer);
+        renderer.clear();
 
+        //stage.draw(&camera, &mut renderer);
         player.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
 
         renderer.render()?;
 
-        std::thread::sleep(UPDATE_INTERVAL);
+        loop_helper.loop_sleep();
     }
 
     Ok(())

@@ -16,3 +16,6 @@ pub use ray::*;
 
 mod animation;
 pub use animation::*;
+
+mod logger;
+pub use logger::*;

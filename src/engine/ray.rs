@@ -1,8 +1,6 @@
-use crate::{
-    debug,
-    engine::{Drawable, Pos, ScreenPos},
-};
+use crate::engine::{Pos, ScreenPos};
 
+#[derive(Debug, Clone, Copy)]
 pub struct Ray {
     pub start: Pos,
     pub end: Pos,
@@ -31,13 +29,8 @@ impl Ray {
 
         path
     }
-}
 
-impl Drawable for Ray {
-    fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
-        for step in self.march() {
-            camera.paint_dot('*', step, renderer);
-            debug!(renderer, format!("ray step: {:?}", step))
-        }
+    pub fn direction(&self) -> Pos {
+        (self.end - self.start).normalize()
     }
 }
