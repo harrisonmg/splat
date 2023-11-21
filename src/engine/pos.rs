@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub type Coord = f32;
 
 pub trait Signed: Copy {
@@ -50,6 +52,12 @@ impl Pos {
     }
 }
 
+impl Display for Pos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ x: {:.3}, y: {:.3} }}", self.x, self.y)
+    }
+}
+
 pub type ScreenCoord = i64;
 
 #[derive(Debug, Clone, Copy)]
@@ -64,6 +72,12 @@ impl ScreenPos {
 
     pub fn new(x: ScreenCoord, y: ScreenCoord) -> Self {
         Self { x, y }
+    }
+}
+
+impl Display for ScreenPos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 

@@ -1,8 +1,11 @@
-use crate::engine::{Button, Drawable, Input, Pos, Ray, Signed};
+use log::debug;
+
+use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
 
 use super::{Chain, UPDATE_INTERVAL};
 
 pub const GRAVITY: Pos = Pos::new(0.0, 200.0);
+pub const AIR_DRAG: Coord = 0.01;
 
 pub struct Player {
     pos: Pos,
@@ -40,6 +43,11 @@ impl Player {
 
         self.vel += GRAVITY.scale(UPDATE_INTERVAL.as_secs_f32());
 
+        let drag_mag = self.vel.magnitude().powi(2) * AIR_DRAG;
+        let drag = self.vel.normalize().scale(-drag_mag);
+        debug!("drag {drag}");
+        self.vel += drag.scale(UPDATE_INTERVAL.as_secs_f32());
+
         if input.pressed(Button::RightMouse) {
             self.pos = input.mouse_pos;
             self.vel = Pos::ZERO;
@@ -54,9 +62,15 @@ impl Player {
 
             let vel_dir = vel_trans.y.sign();
             self.vel = chain_tan.scale(self.vel.magnitude() * vel_dir);
+            debug!("chain vel {}", self.vel);
         }
 
         self.pos += self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
+        debug!("pos {}", self.pos);
+
+        if self.pos.y > 50.0 {
+            self.pos.y = 0.0;
+        }
     }
 }
 
