@@ -1,5 +1,4 @@
 - swinging
-  * chains are stretching because of aliasing
   * air drag may be exposing a flaw in chain math
 
 - hook

@@ -18,7 +18,7 @@ impl Signed for Coord {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pos {
     pub x: Coord,
     pub y: Coord,

@@ -1,5 +1,7 @@
 use crate::engine::{Pos, ScreenPos};
 
+use super::Coord;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
     pub start: Pos,
@@ -32,5 +34,9 @@ impl Ray {
 
     pub fn direction(&self) -> Pos {
         (self.end - self.start).normalize()
+    }
+
+    pub fn length(&self) -> Coord {
+        (self.end - self.start).magnitude()
     }
 }
