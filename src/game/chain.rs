@@ -46,6 +46,11 @@ impl Chain {
     pub fn deployed(&self) -> bool {
         self.num_links_out >= self.links.len()
     }
+
+    pub fn tangent(&self) -> Pos {
+        let dir = self.ray.direction();
+        Pos::new(dir.y, -dir.x)
+    }
 }
 
 impl Drawable for Chain {

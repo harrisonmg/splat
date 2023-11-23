@@ -50,6 +50,13 @@ impl Pos {
             y: self.y / mag,
         }
     }
+
+    pub fn transform_basis(&self, new_basis: Pos) -> Self {
+        Self {
+            x: self.x * new_basis.x + self.y * new_basis.y,
+            y: self.y * new_basis.x - self.x * new_basis.y,
+        }
+    }
 }
 
 impl Display for Pos {

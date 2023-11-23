@@ -36,6 +36,11 @@ impl Ray {
         (self.end - self.start).normalize()
     }
 
+    pub fn angle(&self) -> Coord {
+        let dir = self.direction();
+        dir.y.atan2(dir.x)
+    }
+
     pub fn length(&self) -> Coord {
         (self.end - self.start).magnitude()
     }

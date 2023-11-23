@@ -1,14 +1,14 @@
 use log::debug;
 
-use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
+use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray};
 
 use super::{Chain, UPDATE_INTERVAL};
 
-pub const GRAVITY: Coord = 300.0;
-pub const AIR_DRAG: Coord = 0.00;
+pub const GRAVITY: Coord = 100.0;
+pub const AIR_DRAG: Coord = 0.01;
 
 pub struct Player {
-    pos: Pos,
+    pub pos: Pos,
     vel: Pos,
     chain: Option<Chain>,
 }
@@ -23,11 +23,13 @@ impl Player {
     }
 
     pub fn update(&mut self, input: &Input) {
+        // for testing
         if input.pressed(Button::RightMouse) {
             self.pos = input.mouse_pos;
             self.vel = Pos::ZERO;
         }
 
+        // chain make and break
         if input.pressed_this_frame(Button::LeftMouse) && self.pos != input.mouse_pos {
             self.chain = Some(Chain::new(Ray {
                 start: self.pos,
@@ -35,11 +37,6 @@ impl Player {
             }));
         } else if input.released(Button::LeftMouse) {
             self.chain = None;
-        } else if let Some(chain) = self.chain.as_mut() {
-            chain.update();
-            //if !chain.deployed() {
-            //    return;
-            //}
         }
 
         let gravity_force = Pos::new(0.0, GRAVITY);
@@ -52,8 +49,27 @@ impl Player {
         };
 
         let chain_force = if let Some(chain) = self.chain.as_ref() {
-            let tmp = chain.ray.direction().scale(-GRAVITY);
-            Pos::new(tmp.y, -tmp.x)
+            if !chain.deployed() {
+                // pause in air while deploying
+                //return;
+            }
+
+            // chain is actually a super stiff spring
+
+            // find the component of player velocity that would stretch the chain
+            let vel_trans = self.vel.transform_basis(chain.ray.direction());
+            let vel_opposite_chain = vel_trans.x.abs();
+
+            // calculate the force to negate that velocity in one step
+            let spring_mag = vel_opposite_chain / UPDATE_INTERVAL.as_secs_f32();
+
+            // and the actual pendulum tension force
+            // give it a little kick so the player can generate some speed
+            let chain_mag = -GRAVITY * chain.ray.angle().sin();
+
+            let chain_force = chain.ray.direction().scale(spring_mag + chain_mag);
+
+            chain_force
         } else {
             Pos::ZERO
         };
@@ -65,7 +81,10 @@ impl Player {
         debug!("total {total_force}");
 
         self.vel += total_force.scale(UPDATE_INTERVAL.as_secs_f32());
-        self.pos += self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
+        let new_pos = self.pos + self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
+
+        // TODO collision check with ray
+        self.pos = new_pos;
 
         if let Some(chain) = self.chain.as_mut() {
             let chain_len = chain.ray.length();
@@ -77,7 +96,7 @@ impl Player {
             });
         }
 
-        // TODO
+        // TODO stage death
         if self.pos.y > 50.0 {
             self.pos.y = 0.0;
         }

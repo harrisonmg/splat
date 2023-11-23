@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crossterm::terminal;
 
-use engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
+use engine::{Button, Camera, Coord, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
 use game::{Border, Player, Stage, UPDATE_INTERVAL};
 
 mod engine;
@@ -31,10 +31,13 @@ fn main() -> std::io::Result<()> {
 
     let border = Border;
     let mut player = Player::new();
+    player.pos.x = width as Coord / 2.0;
 
     // use spin_sleep since native sleep is often too slow / low res
     let rate = 1.0 / UPDATE_INTERVAL.as_secs_f64();
-    let mut loop_helper = spin_sleep::LoopHelper::builder().build_with_target_rate(rate);
+    let mut loop_helper = spin_sleep::LoopHelper::builder()
+        .native_accuracy_ns(10000000)
+        .build_with_target_rate(rate);
 
     loop {
         loop_helper.loop_start();
