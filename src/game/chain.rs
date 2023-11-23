@@ -9,6 +9,7 @@ pub struct Chain {
     links: Vec<Pos>,
     num_links_out: usize,
     start_time: Option<Instant>,
+    just_deployed: bool,
 }
 
 impl Chain {
@@ -19,6 +20,7 @@ impl Chain {
             links,
             num_links_out: 0,
             start_time: Some(Instant::now()),
+            just_deployed: false,
         }
     }
 
@@ -30,6 +32,7 @@ impl Chain {
             links,
             num_links_out: num_links,
             start_time: None,
+            just_deployed: false,
         }
     }
 
@@ -39,12 +42,19 @@ impl Chain {
             self.num_links_out = num_links_out as usize;
             if self.deployed() {
                 self.start_time = None;
+                self.just_deployed = true;
             }
+        } else {
+            self.just_deployed = false;
         }
     }
 
     pub fn deployed(&self) -> bool {
         self.num_links_out >= self.links.len()
+    }
+
+    pub fn just_deployed(&self) -> bool {
+        self.just_deployed
     }
 
     pub fn tangent(&self) -> Pos {

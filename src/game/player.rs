@@ -1,11 +1,12 @@
 use log::debug;
 
-use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray};
+use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
 
 use super::{Chain, UPDATE_INTERVAL};
 
 pub const GRAVITY: Coord = 100.0;
-pub const AIR_DRAG: Coord = 0.01;
+pub const AIR_DRAG: Coord = 0.0005;
+pub const SWING_KICK: Coord = 20.0;
 
 pub struct Player {
     pub pos: Pos,
@@ -31,15 +32,18 @@ impl Player {
 
         // chain make and break
         if input.pressed_this_frame(Button::LeftMouse) && self.pos != input.mouse_pos {
-            self.chain = Some(Chain::new(Ray {
+            let chain = Chain::new(Ray {
                 start: self.pos,
                 end: input.mouse_pos,
-            }));
+            });
+            self.chain = Some(chain);
         } else if input.released(Button::LeftMouse) {
             self.chain = None;
+        } else if let Some(chain) = self.chain.as_mut() {
+            chain.update();
         }
 
-        let gravity_force = Pos::new(0.0, GRAVITY);
+        let grav_force = Pos::new(0.0, GRAVITY);
 
         let drag_mag = self.vel.magnitude().powi(2) * AIR_DRAG;
         let drag_force = if drag_mag > 0.0 {
@@ -51,34 +55,46 @@ impl Player {
         let chain_force = if let Some(chain) = self.chain.as_ref() {
             if !chain.deployed() {
                 // pause in air while deploying
-                //return;
+                return;
             }
 
-            // chain is actually a super stiff spring
+            // transform the velocity into the basis of the swing tangent
+            let tangent = chain.tangent();
+            let vel_trans = self.vel.transform_basis(tangent);
 
+            let kick_force = if chain.just_deployed() {
+                // give a little kick when starting a swing
+                // if gravity is in your favor
+                let grav_dir = Pos::new(0.0, 1.0).transform_basis(tangent).x.sign();
+                let vel_dir = vel_trans.x.sign();
+
+                if grav_dir == vel_dir {
+                    tangent.scale(SWING_KICK * vel_dir / UPDATE_INTERVAL.as_secs_f32())
+                } else {
+                    Pos::ZERO
+                }
+            } else {
+                Pos::ZERO
+            };
+
+            // chain is actually a super stiff spring
             // find the component of player velocity that would stretch the chain
-            let vel_trans = self.vel.transform_basis(chain.ray.direction());
-            let vel_opposite_chain = vel_trans.x.abs();
+            let vel_opposite_chain = -vel_trans.y;
 
             // calculate the force to negate that velocity in one step
             let spring_mag = vel_opposite_chain / UPDATE_INTERVAL.as_secs_f32();
 
             // and the actual pendulum tension force
-            // give it a little kick so the player can generate some speed
             let chain_mag = -GRAVITY * chain.ray.angle().sin();
 
             let chain_force = chain.ray.direction().scale(spring_mag + chain_mag);
 
-            chain_force
+            chain_force + kick_force
         } else {
             Pos::ZERO
         };
 
-        let total_force = gravity_force + drag_force + chain_force;
-        debug!("gravity {gravity_force}");
-        debug!("drag {drag_force}");
-        debug!("chain {chain_force}");
-        debug!("total {total_force}");
+        let total_force = grav_force + drag_force + chain_force;
 
         self.vel += total_force.scale(UPDATE_INTERVAL.as_secs_f32());
         let new_pos = self.pos + self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
