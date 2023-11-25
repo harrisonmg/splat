@@ -12,3 +12,6 @@ pub use player::*;
 
 mod chain;
 pub use chain::*;
+
+mod follow_cam;
+pub use follow_cam::*;

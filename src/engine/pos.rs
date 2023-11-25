@@ -80,6 +80,10 @@ impl ScreenPos {
     pub fn new(x: ScreenCoord, y: ScreenCoord) -> Self {
         Self { x, y }
     }
+
+    pub fn indices(&self) -> (usize, usize) {
+        (self.x as usize, self.y as usize)
+    }
 }
 
 impl Display for ScreenPos {

@@ -1,12 +1,10 @@
-use log::debug;
-
 use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
 
-use super::{Chain, UPDATE_INTERVAL};
+use super::{Chain, Stage, Tile, UPDATE_INTERVAL};
 
 pub const GRAVITY: Coord = 100.0;
-pub const AIR_DRAG: Coord = 0.0005;
-pub const SWING_KICK: Coord = 20.0;
+pub const AIR_DRAG: Coord = 0.01;
+pub const SWING_KICK: Coord = 30.0;
 
 pub struct Player {
     pub pos: Pos,
@@ -23,9 +21,9 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, input: &Input) {
-        // for testing
-        if input.pressed(Button::RightMouse) {
+    pub fn update(&mut self, input: &Input, stage: &Stage) {
+        // XXX
+        if input.pressed_this_frame(Button::RightMouse) {
             self.pos = input.mouse_pos;
             self.vel = Pos::ZERO;
         }
@@ -43,8 +41,10 @@ impl Player {
             chain.update();
         }
 
+        // gravity
         let grav_force = Pos::new(0.0, GRAVITY);
 
+        // air drag
         let drag_mag = self.vel.magnitude().powi(2) * AIR_DRAG;
         let drag_force = if drag_mag > 0.0 {
             self.vel.normalize().scale(-drag_mag)
@@ -52,6 +52,7 @@ impl Player {
             Pos::ZERO
         };
 
+        // chain forces
         let chain_force = if let Some(chain) = self.chain.as_ref() {
             if !chain.deployed() {
                 // pause in air while deploying
@@ -99,8 +100,25 @@ impl Player {
         self.vel += total_force.scale(UPDATE_INTERVAL.as_secs_f32());
         let new_pos = self.pos + self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
 
-        // TODO collision check with ray
-        self.pos = new_pos;
+        // collision check
+        let traj = Ray {
+            start: self.pos,
+            end: new_pos,
+        };
+        let steps = traj.march();
+
+        if steps.len() < 2 {
+            self.pos = new_pos
+        }
+
+        for i in 1..steps.len() {
+            if matches!(stage.check_pos(steps[i]), Tile::Something) {
+                self.vel = Pos::ZERO;
+                break;
+            } else {
+                self.pos = steps[i];
+            }
+        }
 
         if let Some(chain) = self.chain.as_mut() {
             let chain_len = chain.ray.length();
@@ -112,7 +130,7 @@ impl Player {
             });
         }
 
-        // TODO stage death
+        // XXX
         if self.pos.y > 50.0 {
             self.pos.y = 0.0;
         }

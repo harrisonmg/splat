@@ -4,7 +4,21 @@ use std::{
     path::Path,
 };
 
-use crate::engine::{Drawable, Pos};
+use crate::engine::{Drawable, Pos, ScreenPos};
+
+pub enum Tile {
+    Something,
+    Nothing,
+}
+
+impl From<char> for Tile {
+    fn from(value: char) -> Self {
+        match value {
+            ' ' => Self::Nothing,
+            _ => Self::Something,
+        }
+    }
+}
 
 pub struct Stage {
     data: Vec<Vec<char>>,
@@ -18,6 +32,14 @@ impl Stage {
             data.push(line?.chars().collect());
         }
         Ok(Self { data })
+    }
+
+    pub fn check_pos(&self, pos: Pos) -> Tile {
+        let (x, y) = ScreenPos::from(pos).indices();
+        self.data
+            .get(y)
+            .and_then(|row| row.get(x))
+            .map_or(Tile::Nothing, |dot| Tile::from(*dot))
     }
 }
 
