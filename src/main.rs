@@ -49,7 +49,7 @@ fn main() -> std::io::Result<()> {
         }
 
         player.update(&input, &stage);
-        camera.update(&player);
+        //camera.update(&player);
 
         renderer.clear();
 
