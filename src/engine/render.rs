@@ -37,7 +37,7 @@ impl Renderer {
         Ok(Self {
             width,
             height,
-            frame: vec![vec![Self::CLEAR_CHAR; height as usize]; width as usize],
+            frame: vec![vec![Self::CLEAR_CHAR; width as usize]; height as usize],
             stdout,
             logger,
         })
@@ -53,33 +53,33 @@ impl Renderer {
 
     pub fn paint(&mut self, frame_x: Dimension, frame_y: Dimension, dot: char) {
         if frame_x < self.width && frame_y < self.height {
-            self.frame[frame_x as usize][frame_y as usize] = dot;
+            self.frame[frame_y as usize][frame_x as usize] = dot;
         }
     }
 
     pub fn clear(&mut self) {
-        for x in 0..self.width {
-            for y in 0..self.height {
-                self.frame[x as usize][y as usize] = Self::CLEAR_CHAR;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                self.frame[y as usize][x as usize] = Self::CLEAR_CHAR;
             }
         }
     }
 
     pub fn render(&mut self) -> std::io::Result<()> {
-        for x in 0..self.width {
-            for y in 0..self.height {
-                let dot = self.frame[x as usize][y as usize];
-                queue!(self.stdout, cursor::MoveTo(x, y), style::Print(dot))?;
-            }
+        queue!(self.stdout, cursor::MoveTo(0, 0))?;
+
+        for x in 0..self.height {
+            let line = String::from_iter(self.frame[x as usize].iter());
+            queue!(self.stdout, style::Print(line), cursor::MoveToNextLine(1))?;
         }
 
         if let Some(logger) = self.logger {
             for msg in logger.drain() {
                 queue!(
                     self.stdout,
-                    cursor::MoveToNextLine(1),
                     style::Print(msg),
-                    terminal::Clear(terminal::ClearType::UntilNewLine)
+                    terminal::Clear(terminal::ClearType::UntilNewLine),
+                    cursor::MoveToNextLine(1),
                 )?;
             }
         }

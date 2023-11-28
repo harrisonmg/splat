@@ -5,7 +5,7 @@ use std::path::Path;
 use crossterm::terminal;
 
 use engine::{Button, Camera, Coord, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use game::{Border, FollowCam, Player, Stage, UPDATE_INTERVAL};
+use game::{Border, FollowCam, Player, Stage, UPDATE_RATE};
 
 mod engine;
 mod game;
@@ -34,11 +34,7 @@ fn main() -> std::io::Result<()> {
     player.pos.x = width as Coord / 2.0;
 
     // use spin_sleep since native sleep is often too slow / low res
-    let rate = 1.0 / UPDATE_INTERVAL.as_secs_f64();
-    let mut loop_helper = spin_sleep::LoopHelper::builder()
-        .native_accuracy_ns(10000000)
-        .report_interval_s(0.5)
-        .build_with_target_rate(rate);
+    let mut loop_helper = spin_sleep::LoopHelper::builder().build_with_target_rate(UPDATE_RATE);
 
     loop {
         loop_helper.loop_start();
@@ -49,7 +45,7 @@ fn main() -> std::io::Result<()> {
         }
 
         player.update(&input, &stage);
-        //camera.update(&player);
+        camera.update(&player);
 
         renderer.clear();
 
@@ -57,14 +53,17 @@ fn main() -> std::io::Result<()> {
         player.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
 
-        if let Some(rate) = loop_helper.report_rate() {
-            log::debug!("{rate}");
-        }
-
         renderer.render()?;
 
         loop_helper.loop_sleep();
     }
 
     Ok(())
+}
+
+#[macro_export]
+macro_rules! dbg {
+    ($val: expr) => {
+        log::debug!("{:?} = {:?}", stringify!($val), $val)
+    };
 }

@@ -1,6 +1,6 @@
 use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
 
-use super::{Chain, Stage, Tile, UPDATE_INTERVAL};
+use super::{Chain, Stage, Tile, DELTA_TIME};
 
 pub const GRAVITY: Coord = 100.0;
 pub const AIR_DRAG: Coord = 0.01;
@@ -70,7 +70,7 @@ impl Player {
                 let vel_dir = vel_trans.x.sign();
 
                 if grav_dir == vel_dir {
-                    tangent.scale(SWING_KICK * vel_dir / UPDATE_INTERVAL.as_secs_f32())
+                    tangent.scale(SWING_KICK * vel_dir / DELTA_TIME)
                 } else {
                     Pos::ZERO
                 }
@@ -83,7 +83,7 @@ impl Player {
             let vel_opposite_chain = -vel_trans.y;
 
             // calculate the force to negate that velocity in one step
-            let spring_mag = vel_opposite_chain / UPDATE_INTERVAL.as_secs_f32();
+            let spring_mag = vel_opposite_chain / DELTA_TIME;
 
             // and the actual pendulum tension force
             let chain_mag = -GRAVITY * chain.ray.angle().sin();
@@ -97,8 +97,8 @@ impl Player {
 
         let total_force = grav_force + drag_force + chain_force;
 
-        self.vel += total_force.scale(UPDATE_INTERVAL.as_secs_f32());
-        let new_pos = self.pos + self.vel.scale(UPDATE_INTERVAL.as_secs_f32());
+        self.vel += total_force.scale(DELTA_TIME);
+        let new_pos = self.pos + self.vel.scale(DELTA_TIME);
 
         // collision check
         let traj = Ray {

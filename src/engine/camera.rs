@@ -9,56 +9,57 @@ pub struct Camera {
 
 impl Camera {
     pub fn paint_sprite(&self, sprite: &Sprite, pos: Pos, renderer: &mut Renderer) {
-        let sprite_pos = ScreenPos::from(pos - self.pos);
-        let cam_pos = ScreenPos::from(self.pos);
+        let sprite_screen_pos = ScreenPos::from(pos - self.pos);
+        let cam_screen_pos = ScreenPos::from(self.pos);
 
-        for y in sprite_pos.y..cam_pos.y + self.height as ScreenCoord {
-            let sprite_y = (y - sprite_pos.y) as usize;
-            if sprite_y >= sprite.len() {
-                break;
-            }
+        let start_y = sprite_screen_pos.y.max(cam_screen_pos.y);
+        let start_x = sprite_screen_pos.x.max(cam_screen_pos.x);
 
-            for x in sprite_pos.x..cam_pos.x + self.width as ScreenCoord {
-                let sprite_x = (x - sprite_pos.x) as usize;
-                if sprite_x >= sprite[sprite_y].len() {
-                    break;
-                }
+        let cam_screen_end = cam_screen_pos + ScreenPos::new(self.width.into(), self.height.into());
+        let end_y = cam_screen_end
+            .y
+            .min(sprite_screen_pos.y + sprite.len() as ScreenCoord);
 
-                let frame_x = x - cam_pos.x;
-                let frame_y = y - cam_pos.y;
+        crate::dbg!(self.width);
+        crate::dbg!(self.height);
+        crate::dbg!(sprite_screen_pos);
+        crate::dbg!(cam_screen_pos);
+        crate::dbg!(start_x);
+        crate::dbg!(start_y);
+        crate::dbg!(end_y);
 
-                if frame_x >= 0
-                    && frame_x < self.width as ScreenCoord
-                    && frame_y >= 0
-                    && frame_y < self.height as ScreenCoord
-                {
-                    let dot = sprite[sprite_y][sprite_x];
-                    if dot.is_whitespace() {
-                        continue;
-                    }
+        for y in start_y..end_y {
+            let sprite_y = (y - start_y) as usize;
+            let end_x = cam_screen_end
+                .x
+                .min(sprite_screen_pos.x + sprite[sprite_y].len() as ScreenCoord);
+            crate::dbg!(end_x);
 
-                    renderer.paint(
-                        (self.frame_pos.x + frame_x) as Dimension,
-                        (self.frame_pos.y + frame_y) as Dimension,
-                        dot,
-                    );
-                }
+            for x in start_x..end_x {
+                let sprite_x = (x - start_x) as usize;
+                let dot = sprite[sprite_y][sprite_x];
+
+                renderer.paint(
+                    (self.frame_pos.x + x) as Dimension,
+                    (self.frame_pos.y + y) as Dimension,
+                    dot,
+                );
             }
         }
     }
 
     pub fn paint_dot(&self, dot: char, pos: Pos, renderer: &mut Renderer) {
-        let dot_pos = ScreenPos::from(pos - self.pos);
-        let cam_pos = ScreenPos::from(self.pos);
+        let dot_screen_pos = ScreenPos::from(pos - self.pos);
+        let cam_screen_pos = ScreenPos::from(self.pos);
 
-        if dot_pos.x >= 0
-            && dot_pos.x < cam_pos.x + self.width as ScreenCoord
-            && dot_pos.y >= 0
-            && dot_pos.y < cam_pos.y + self.height as ScreenCoord
+        if dot_screen_pos.x >= 0
+            && dot_screen_pos.x < cam_screen_pos.x + self.width as ScreenCoord
+            && dot_screen_pos.y >= 0
+            && dot_screen_pos.y < cam_screen_pos.y + self.height as ScreenCoord
         {
             renderer.paint(
-                (self.frame_pos.x + dot_pos.x) as Dimension,
-                (self.frame_pos.y + dot_pos.y) as Dimension,
+                (self.frame_pos.x + dot_screen_pos.x) as Dimension,
+                (self.frame_pos.y + dot_screen_pos.y) as Dimension,
                 dot,
             );
         }
