@@ -1,4 +1,4 @@
-use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
+use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, ScreenPos, Signed};
 
 use super::{Chain, Stage, Tile, DELTA_TIME};
 
@@ -107,10 +107,6 @@ impl Player {
         };
         let steps = traj.march();
 
-        if steps.len() < 2 {
-            self.pos = new_pos
-        }
-
         for i in 1..steps.len() {
             if matches!(stage.check_pos(steps[i]), Tile::Something) {
                 self.vel = Pos::ZERO;
@@ -129,11 +125,6 @@ impl Player {
                 end: chain.ray.end,
             });
         }
-
-        // XXX
-        //if self.pos.y > 50.0 {
-        //    self.pos.y = 0.0;
-        //}
     }
 }
 
