@@ -5,7 +5,7 @@ use std::path::Path;
 use crossterm::terminal;
 
 use engine::{Button, Camera, Coord, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use game::{Border, FollowCam, Player, Stage, UPDATE_RATE};
+use game::{Border, Player, Stage, UPDATE_RATE};
 
 mod engine;
 mod game;
@@ -45,7 +45,7 @@ fn main() -> std::io::Result<()> {
         }
 
         player.update(&input, &stage);
-        camera.update(&player);
+        camera.update(&player, &input);
 
         renderer.clear();
 

@@ -131,9 +131,9 @@ impl Player {
         }
 
         // XXX
-        if self.pos.y > 50.0 {
-            self.pos.y = 0.0;
-        }
+        //if self.pos.y > 50.0 {
+        //    self.pos.y = 0.0;
+        //}
     }
 }
 

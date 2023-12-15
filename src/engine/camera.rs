@@ -9,8 +9,8 @@ pub struct Camera {
 
 impl Camera {
     pub fn paint_sprite(&self, sprite: &Sprite, pos: Pos, renderer: &mut Renderer) {
-        let sprite_screen_pos = ScreenPos::from(pos - self.pos);
         let cam_screen_pos = ScreenPos::from(self.pos);
+        let sprite_screen_pos = ScreenPos::from(pos) - cam_screen_pos;
 
         let start_y = sprite_screen_pos.y.max(cam_screen_pos.y);
         let start_x = sprite_screen_pos.x.max(cam_screen_pos.x);
