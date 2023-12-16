@@ -46,3 +46,10 @@ impl Logger {
         }
     }
 }
+
+#[macro_export]
+macro_rules! dbg {
+    ($val: expr) => {
+        log::debug!("{:?} = {:?}", stringify!($val), $val)
+    };
+}

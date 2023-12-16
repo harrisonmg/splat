@@ -20,20 +20,11 @@ impl Camera {
             .y
             .min(sprite_screen_pos.y + sprite.len() as ScreenCoord);
 
-        crate::dbg!(self.width);
-        crate::dbg!(self.height);
-        crate::dbg!(sprite_screen_pos);
-        crate::dbg!(cam_screen_pos);
-        crate::dbg!(start_x);
-        crate::dbg!(start_y);
-        crate::dbg!(end_y);
-
         for y in start_y..end_y {
             let sprite_y = (y - sprite_screen_pos.y) as usize;
             let end_x = cam_screen_end
                 .x
                 .min(sprite_screen_pos.x + sprite[sprite_y].len() as ScreenCoord);
-            //crate::dbg!(end_x);
 
             for x in start_x..end_x {
                 let sprite_x = (x - sprite_screen_pos.x) as usize;

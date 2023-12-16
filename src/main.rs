@@ -34,10 +34,18 @@ fn main() -> std::io::Result<()> {
     player.pos.x = width as Coord / 2.0;
 
     // use spin_sleep since native sleep is often too slow / low res
-    let mut loop_helper = spin_sleep::LoopHelper::builder().build_with_target_rate(UPDATE_RATE);
+    let mut loop_helper = spin_sleep::LoopHelper::builder()
+        .report_interval_s(1.0)
+        .build_with_target_rate(UPDATE_RATE);
+    let mut actual_rate = 0.0;
 
     loop {
         loop_helper.loop_start();
+
+        if let Some(rate) = loop_helper.report_rate() {
+            actual_rate = rate;
+        }
+        dbg!(actual_rate);
 
         input.update(&camera)?;
         if input.pressed_this_frame(Button::Quit) {
@@ -45,7 +53,7 @@ fn main() -> std::io::Result<()> {
         }
 
         player.update(&input, &stage);
-        camera.update(&player, &input);
+        camera.update(&player);
 
         renderer.clear();
 
@@ -59,11 +67,4 @@ fn main() -> std::io::Result<()> {
     }
 
     Ok(())
-}
-
-#[macro_export]
-macro_rules! dbg {
-    ($val: expr) => {
-        log::debug!("{:?} = {:?}", stringify!($val), $val)
-    };
 }

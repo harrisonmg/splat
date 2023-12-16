@@ -7,14 +7,16 @@ use std::{
 use crate::engine::{Drawable, Pos, ScreenPos};
 
 pub enum Tile {
-    Something,
     Nothing,
+    Spring,
+    Something,
 }
 
 impl From<char> for Tile {
     fn from(value: char) -> Self {
         match value {
             ' ' => Self::Nothing,
+            'z' => Self::Spring,
             _ => Self::Something,
         }
     }

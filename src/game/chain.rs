@@ -4,57 +4,80 @@ use crate::engine::{Drawable, Pos, Ray};
 
 const LINK_TIME: Duration = Duration::from_millis(5);
 
+enum State {
+    Deploying,
+    Deployed,
+    Retracting,
+    Retracted,
+}
+
 pub struct Chain {
     pub ray: Ray,
+    state: State,
     links: Vec<Pos>,
     num_links_out: usize,
-    start_time: Option<Instant>,
+    start_time: Instant,
     just_deployed: bool,
 }
 
 impl Chain {
     pub fn new(ray: Ray) -> Self {
-        let links = ray.march();
         Self {
             ray,
-            links,
+            state: State::Retracted,
+            links: Vec::new(),
             num_links_out: 0,
-            start_time: Some(Instant::now()),
-            just_deployed: false,
-        }
-    }
-
-    pub fn new_deployed(ray: Ray) -> Self {
-        let links = ray.march();
-        let num_links = links.len();
-        Self {
-            ray,
-            links,
-            num_links_out: num_links,
-            start_time: None,
+            start_time: Instant::now(),
             just_deployed: false,
         }
     }
 
     pub fn update(&mut self) {
-        if let Some(start_time) = self.start_time {
-            let num_links_out = start_time.elapsed().as_secs_f64() / LINK_TIME.as_secs_f64();
-            self.num_links_out = num_links_out as usize;
-            if self.deployed() {
-                self.start_time = None;
-                self.just_deployed = true;
+        self.just_deployed = false;
+        self.links = self.ray.march();
+
+        match self.state {
+            State::Deploying => {
+                let num_links_out =
+                    self.start_time.elapsed().as_secs_f64() / LINK_TIME.as_secs_f64();
+                let num_links_out = (num_links_out as usize).min(self.links.len());
+                self.num_links_out = num_links_out;
+
+                if self.num_links_out == self.links.len() {
+                    self.state = State::Deployed;
+                }
             }
-        } else {
-            self.just_deployed = false;
+            State::Retracting => {
+                let num_links_in =
+                    self.start_time.elapsed().as_secs_f64() / LINK_TIME.as_secs_f64();
+                let num_links_in = (num_links_in as usize).min(self.links.len());
+                self.num_links_out = self.links.len() - num_links_in;
+
+                if self.num_links_out == 0 {
+                    self.state = State::Retracted;
+                }
+            }
+            _ => (),
         }
     }
 
+    pub fn deploy(&mut self) {
+        self.state = State::Deploying;
+        self.start_time = Instant::now();
+        self.just_deployed = true;
+    }
+
     pub fn deployed(&self) -> bool {
-        self.num_links_out >= self.links.len()
+        matches!(self.state, State::Deploying | State::Deployed)
     }
 
     pub fn just_deployed(&self) -> bool {
         self.just_deployed
+    }
+
+    pub fn retract(&mut self) {
+        self.state = State::Retracting;
+        self.start_time = Instant::now();
     }
 
     pub fn tangent(&self) -> Pos {

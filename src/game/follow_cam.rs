@@ -1,10 +1,12 @@
-use crate::engine::{Camera, Coord, Input, ScreenPos};
+use crate::engine::{Camera, ScreenPos};
 
 use super::Player;
 
 impl Camera {
-    pub fn update(&mut self, player: &Player, input: &Input) {
-        self.pos.x = player.pos.x - Coord::from(self.width) / 2.0;
-        self.pos.y = player.pos.y - Coord::from(self.height);
+    pub fn update(&mut self, player: &Player) {
+        // quantize to screen coords to avoid collision alignment looking weird
+        let offset = ScreenPos::new((self.width / 2).into(), (self.height / 2).into());
+        let quantized = ScreenPos::from(player.pos) - offset;
+        self.pos = quantized.into();
     }
 }
