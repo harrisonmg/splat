@@ -6,6 +6,14 @@ struct LoggerInner {
     buffer: Mutex<Vec<String>>,
 }
 
+impl LoggerInner {
+    fn new() -> Self {
+        Self {
+            buffer: Mutex::new(Vec::new()),
+        }
+    }
+}
+
 impl Log for LoggerInner {
     fn enabled(&self, _metadata: &Metadata) -> bool {
         true
@@ -24,9 +32,7 @@ pub struct Logger(LoggerInner);
 
 impl Logger {
     pub fn setup() -> Result<&'static Self, SetLoggerError> {
-        let logger = Box::leak(Box::new(Self(LoggerInner {
-            buffer: Mutex::new(Vec::new()),
-        })));
+        let logger = Box::leak(Box::new(Self(LoggerInner::new())));
         log::set_logger(&logger.0)?;
         log::set_max_level(LevelFilter::Debug);
         Ok(logger)
