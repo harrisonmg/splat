@@ -7,6 +7,7 @@ use std::{
 use crate::engine::{Drawable, Pos, ScreenPos};
 
 pub enum Tile {
+    OutOfBounds,
     Nothing,
     Spring,
     Something,
@@ -41,7 +42,7 @@ impl Stage {
         self.data
             .get(y)
             .and_then(|row| row.get(x))
-            .map_or(Tile::Nothing, |dot| Tile::from(*dot))
+            .map_or(Tile::OutOfBounds, |dot| Tile::from(*dot))
     }
 }
 

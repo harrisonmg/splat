@@ -1,4 +1,4 @@
-use crate::engine::{Button, Coord, Drawable, Input, Pos, Ray, Signed};
+use crate::engine::{Button, Coord, Drawable, InifiniteRay, Input, Pos, Ray, Signed};
 
 use super::{Chain, Stage, Tile, DELTA_TIME};
 
@@ -31,7 +31,7 @@ impl Player {
 
     pub fn update(&mut self, input: &Input, stage: &Stage) {
         self.jump(input);
-        self.chain_throw(input);
+        self.chain_throw(input, stage);
         let new_pos = self.kinematics();
         self.collision(new_pos, stage);
         self.chain.ray.start = self.pos;
@@ -45,11 +45,22 @@ impl Player {
         }
     }
 
-    fn chain_throw(&mut self, input: &Input) {
+    fn chain_throw(&mut self, input: &Input, stage: &Stage) {
         if input.pressed_this_frame(Button::LeftMouse) && self.pos != input.mouse_pos {
-            self.stuck = false;
-            self.chain.ray.end = input.mouse_pos;
-            self.chain.deploy();
+            let mut ray = InifiniteRay::new(self.pos, input.mouse_pos - self.pos);
+            if let Some(pos) = ray.next() {
+                let mut end = pos;
+                for pos in ray {
+                    if !matches!(stage.check_pos(pos), Tile::Nothing) {
+                        break;
+                    } else {
+                        end = pos
+                    }
+                }
+                self.stuck = false;
+                self.chain.ray.end = end;
+                self.chain.deploy();
+            }
         } else if input.released_this_frame(Button::LeftMouse) {
             self.chain.retract();
         } else {
@@ -127,7 +138,7 @@ impl Player {
         for i in 1..steps.len() {
             let next_step = steps[i];
             match stage.check_pos(next_step) {
-                Tile::Nothing => {
+                Tile::OutOfBounds | Tile::Nothing => {
                     self.pos = next_step;
                     continue;
                 }

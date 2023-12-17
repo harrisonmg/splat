@@ -14,7 +14,8 @@ impl Ray {
     pub fn march(&self) -> Vec<Pos> {
         let heading = (self.end - self.start).normalize();
         let dot_size = Pos::from(ScreenPos::ONE);
-        let step = heading.scale(dot_size.x.min(dot_size.y));
+        let step_size = dot_size.x.min(dot_size.y);
+        let step = heading.scale(step_size);
 
         let mut pos = self.start;
         let mut path = vec![pos];
@@ -43,5 +44,31 @@ impl Ray {
 
     pub fn length(&self) -> Coord {
         (self.end - self.start).magnitude()
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct InifiniteRay {
+    pos: Pos,
+    direction: Pos,
+}
+
+impl InifiniteRay {
+    pub fn new(start: Pos, direction: Pos) -> Self {
+        Self {
+            pos: start,
+            direction: direction.normalize(),
+        }
+    }
+}
+
+impl Iterator for InifiniteRay {
+    type Item = Pos;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let dot_size = Pos::from(ScreenPos::ONE);
+        let step_size = dot_size.x.min(dot_size.y);
+        self.pos += self.direction.scale(step_size);
+        Some(self.pos)
     }
 }
