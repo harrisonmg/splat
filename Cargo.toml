@@ -1,9 +1,11 @@
 [package]
-name = "plat"
+name = "splat"
 version = "0.1.0"
 edition = "2021"
+default-run = "splat"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "showcase"
 
 [dependencies]
 anyhow = "1.0.75"
