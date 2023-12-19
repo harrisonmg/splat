@@ -1,14 +1,17 @@
-use std::path::Path;
-
+use bear::Bear;
 use crossterm::terminal;
 
-use splat::engine::{Button, Camera, Coord, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use splat::game::{Border, Player, Stage, UPDATE_RATE};
+use splat::engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
+use splat::game::{Border, UPDATE_RATE};
+use ui_button::UiButtons;
+
+mod bear;
+mod ui_button;
 
 fn main() -> std::io::Result<()> {
     let size = terminal::window_size()?;
     let width = size.columns;
-    let height = size.rows;
+    let height = size.rows - 10;
 
     let logger = Logger::setup().unwrap();
     let mut renderer = Renderer::new(width, height, Some(logger))?;
@@ -21,12 +24,20 @@ fn main() -> std::io::Result<()> {
         height: height - 3,
     };
 
+    let ui_camera = Camera {
+        pos: Pos::ZERO,
+        frame_pos: ScreenPos::ZERO,
+        width,
+        height,
+    };
+
     let mut input = Input::new()?;
-    let stage = Stage::load(Path::new("test.stage"))?;
 
     let border = Border;
-    let mut player = Player::new();
-    player.pos.x = width as Coord / 2.0;
+
+    let mut ui_buttons = UiButtons::new();
+
+    let mut bear = Bear::new();
 
     // use spin_sleep since native sleep is often too slow / low res
     let mut loop_helper = spin_sleep::LoopHelper::builder()
@@ -40,21 +51,22 @@ fn main() -> std::io::Result<()> {
         if let Some(rate) = loop_helper.report_rate() {
             actual_rate = rate;
         }
-        dbg!(actual_rate);
+        splat::dbg!(actual_rate);
 
         input.update(&camera)?;
         if input.pressed_this_frame(Button::Quit) {
             break;
         }
+        splat::dbg!(input.mouse_pos);
 
-        player.update(&input, &stage);
-        camera.update(&player);
+        bear.update();
+        ui_buttons.update(&input, &mut camera);
 
         renderer.clear();
 
-        stage.draw(&camera, &mut renderer);
-        player.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
+        bear.draw(&camera, &mut renderer);
+        ui_buttons.draw(&ui_camera, &mut renderer);
 
         renderer.render()?;
 

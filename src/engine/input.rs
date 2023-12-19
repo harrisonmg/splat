@@ -77,6 +77,7 @@ pub enum ButtonState {
 
 pub struct Input {
     pub mouse_pos: Pos,
+    pub mouse_screen_pos: ScreenPos,
     state: HashMap<Button, ButtonState>,
 }
 
@@ -93,6 +94,7 @@ impl Input {
         Ok(Self {
             state: HashMap::new(),
             mouse_pos: Pos::ZERO,
+            mouse_screen_pos: ScreenPos::ZERO,
         })
     }
 
@@ -147,10 +149,9 @@ impl Input {
                     }
                 }
                 Event::Mouse(mouse_event) => {
-                    let mouse_pos =
-                        ScreenPos::new(mouse_event.column.into(), mouse_event.row.into())
-                            - camera.frame_pos;
-                    self.mouse_pos = camera.pos + mouse_pos.into();
+                    self.mouse_screen_pos =
+                        ScreenPos::new(mouse_event.column.into(), mouse_event.row.into());
+                    self.mouse_pos = camera.pos + (self.mouse_screen_pos - camera.frame_pos).into();
 
                     if let Some(button) = Button::from_mouse_event(&mouse_event) {
                         match mouse_event.kind {

@@ -1,5 +1,3 @@
-- stage
 - spikes
-- save
-    * stage
-    * player
+- checkpoints
+- stage
