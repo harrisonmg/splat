@@ -1,4 +1,8 @@
-use crate::engine::{Button, Coord, Drawable, InifiniteRay, Input, Pos, Ray, Signed};
+use std::time::Duration;
+
+use crate::engine::{
+    Animation, Button, Coord, Drawable, InifiniteRay, Input, Pos, Ray, ScreenPos, Signed,
+};
 
 use super::{Chain, Stage, Tile, DELTA_TIME};
 
@@ -14,10 +18,38 @@ pub struct Player {
     vel: Pos,
     chain: Chain,
     stuck: bool,
+    death_anim: Animation,
+    death_anim_offset: Pos,
+    checkpoint: Pos,
 }
 
 impl Player {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
+        let mut death_anim = Animation::new(
+            vec![
+                vec![
+                    vec!['\\', '|', '/'],
+                    vec!['-', '*', '-'],
+                    vec!['/', '|', '\\'],
+                ],
+                vec![
+                    vec!['*', '*', '*'],
+                    vec!['*', ' ', '*'],
+                    vec!['*', '*', '*'],
+                ],
+                vec![],
+                vec![],
+                vec![],
+                vec![],
+                vec![],
+                vec![],
+            ],
+            Duration::from_millis(100),
+            true,
+        );
+        death_anim.pause();
+
         Self {
             pos: Pos::ZERO,
             vel: Pos::ZERO,
@@ -26,15 +58,34 @@ impl Player {
                 end: Pos::ZERO,
             }),
             stuck: true,
+            death_anim,
+            death_anim_offset: ScreenPos::new(-1, -1).into(),
+            checkpoint: Pos::ZERO,
         }
     }
 
     pub fn update(&mut self, input: &Input, stage: &Stage) {
+        self.death();
         self.jump(input);
         self.chain_throw(input, stage);
         let new_pos = self.kinematics();
         self.collision(new_pos, stage);
         self.chain.ray.start = self.pos;
+    }
+
+    fn death(&mut self) {
+        self.death_anim.update();
+        if self.death_anim.done() {
+            self.pos = self.checkpoint;
+            self.vel = Pos::ZERO;
+            self.chain = Chain::new(Ray {
+                start: Pos::ZERO,
+                end: Pos::ZERO,
+            });
+            self.stuck = true;
+            self.death_anim.reset();
+            self.death_anim.pause();
+        }
     }
 
     fn jump(&mut self, input: &Input) {
@@ -133,13 +184,11 @@ impl Player {
             start: self.pos,
             end: new_pos,
         };
-        let steps = traj.march();
 
-        for i in 1..steps.len() {
-            let next_step = steps[i];
-            match stage.check_pos(next_step) {
+        for step in traj.march() {
+            match stage.check_pos(step) {
                 Tile::OutOfBounds | Tile::Nothing => {
-                    self.pos = next_step;
+                    self.pos = step;
                     continue;
                 }
                 Tile::Something => {
@@ -150,6 +199,14 @@ impl Player {
                     self.vel.y *= -SPRING_KICK;
                     self.vel.y = self.vel.y.min(-MIN_SPRING_VEL);
                 }
+                Tile::Spike => {
+                    self.death_anim.play();
+                }
+                Tile::Checkpoint => {
+                    self.checkpoint = ScreenPos::from(step).into();
+                    self.pos = step;
+                    continue;
+                }
             }
         }
     }
@@ -158,6 +215,15 @@ impl Player {
 impl Drawable for Player {
     fn draw(&self, camera: &crate::engine::Camera, renderer: &mut crate::engine::Renderer) {
         self.chain.draw(camera, renderer);
-        camera.paint_dot('O', self.pos, renderer);
+
+        if self.death_anim.playing() {
+            camera.paint_sprite(
+                self.death_anim.get_frame(),
+                self.pos + self.death_anim_offset,
+                renderer,
+            );
+        } else {
+            camera.paint_dot('O', self.pos, renderer);
+        }
     }
 }

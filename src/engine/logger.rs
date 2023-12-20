@@ -42,7 +42,7 @@ impl Logger {
         if let Ok(mut buf) = self.0.buffer.lock() {
             buf.drain(..).collect()
         } else {
-            return Vec::new();
+            Vec::new()
         }
     }
 }

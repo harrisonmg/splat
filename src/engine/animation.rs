@@ -10,6 +10,7 @@ pub struct Animation {
     frame_time: Duration,
     frame_time_left: Duration,
     one_shot: bool,
+    paused: bool,
 }
 
 impl Animation {
@@ -20,10 +21,15 @@ impl Animation {
             frame_time,
             frame_time_left: frame_time,
             one_shot,
+            paused: false,
         }
     }
 
     pub fn update(&mut self) {
+        if self.paused {
+            return;
+        }
+
         match self.frame_time_left.checked_sub(UPDATE_INTERVAL) {
             Some(time) => self.frame_time_left = time,
             None => {
@@ -48,5 +54,17 @@ impl Animation {
 
     pub fn done(&self) -> bool {
         self.one_shot && self.current_frame == self.frames.len() - 1
+    }
+
+    pub fn playing(&self) -> bool {
+        !self.paused && !self.done()
+    }
+
+    pub fn play(&mut self) {
+        self.paused = false;
+    }
+
+    pub fn pause(&mut self) {
+        self.paused = true;
     }
 }

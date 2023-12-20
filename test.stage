@@ -2,11 +2,11 @@
                         ------------          --------------                 .
                                                                              .
                                                                              .
+                                                            ◈◈◈◈◈◈◈◈         .
                                                                              .
                                                                              .
                                                                              .
-                                                                             .
-                                                                             .
+                                                           ▲▲▲▲▲▲▲▲▲▲        .
 123456789          -                                       ----------        .
                    -                                       -                 .
                    -                                       -                 .
@@ -36,5 +36,7 @@
     i              -                                       -                 .
    i               -                                       -                 .
   i                -                                       -                 .
- i                 -                                       -                 .
+ i                 -        ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲              -                 .
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+
+            '◀' | '▶' | '▲' | '▼' => Self::Spike,

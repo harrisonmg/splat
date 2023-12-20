@@ -1,3 +1,1 @@
-- spikes
-- checkpoints
 - stage

@@ -10,6 +10,8 @@ pub enum Tile {
     OutOfBounds,
     Nothing,
     Spring,
+    Spike,
+    Checkpoint,
     Something,
 }
 
@@ -18,6 +20,8 @@ impl From<char> for Tile {
         match value {
             ' ' => Self::Nothing,
             'z' => Self::Spring,
+            '◀' | '▶' | '▲' | '▼' => Self::Spike,
+            '◈' => Self::Checkpoint,
             _ => Self::Something,
         }
     }
