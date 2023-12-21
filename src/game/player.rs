@@ -21,6 +21,7 @@ pub struct Player {
     stuck: bool,
     death_anim: Animation,
     death_anim_offset: Pos,
+    death_count: u32,
     checkpoint: Pos,
 }
 
@@ -61,6 +62,7 @@ impl Player {
             stuck: true,
             death_anim,
             death_anim_offset: ScreenPos::new(-1, -1).into(),
+            death_count: 0,
             checkpoint: starting_pos,
         }
     }
@@ -86,6 +88,7 @@ impl Player {
     fn death(&mut self, input: &Input) {
         self.death_anim.update();
         if self.death_anim.done() || input.pressed_this_frame(Button::Reset) {
+            self.death_count += 1;
             self.pos = self.checkpoint;
             self.vel = Pos::ZERO;
             self.chain = Chain::new(Ray {
@@ -232,6 +235,14 @@ impl Drawable for Player {
             );
         } else {
             camera.paint_dot('O', self.pos, renderer);
+        }
+
+        if self.death_count > 1 {
+            let death_counter = format!("you died {} times", self.death_count);
+            let y = renderer.height() - 1;
+            for (i, dot) in death_counter.chars().enumerate() {
+                renderer.paint(i as u16, y, dot);
+            }
         }
     }
 }

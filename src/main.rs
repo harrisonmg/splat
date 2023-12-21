@@ -5,7 +5,7 @@ use std::path::Path;
 use crossterm::terminal;
 
 use engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use game::{Bear, Border, Player, Stage, UPDATE_RATE};
+use game::{Bear, Border, Player, Stage, Timer, UPDATE_RATE};
 
 mod engine;
 mod game;
@@ -30,6 +30,8 @@ fn main() -> std::io::Result<()> {
     let stage = Stage::load(Path::new("game.stage"))?;
 
     let border = Border;
+    let timer = Timer::new();
+
     let mut player = Player::new(Pos::new(13.0, 102.0));
     let mut left_bear = Bear::new(Pos::new(373.0, 756.0));
     let mut right_bear = Bear::new(Pos::new(450.0, 756.0));
@@ -65,6 +67,7 @@ fn main() -> std::io::Result<()> {
         left_bear.draw(&camera, &mut renderer);
         right_bear.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
+        timer.draw(&camera, &mut renderer);
 
         renderer.render()?;
 
