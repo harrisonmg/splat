@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crossterm::terminal;
 
-use engine::{Button, Camera, Coord, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
+use engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
 use game::{Border, Player, Stage, UPDATE_RATE};
 
 mod engine;
@@ -13,7 +13,7 @@ mod game;
 fn main() -> std::io::Result<()> {
     let size = terminal::window_size()?;
     let width = size.columns;
-    let height = size.rows / 2;
+    let height = size.rows - 10;
 
     let logger = Logger::setup().unwrap();
     let mut renderer = Renderer::new(width, height, Some(logger))?;
@@ -27,11 +27,10 @@ fn main() -> std::io::Result<()> {
     };
 
     let mut input = Input::new()?;
-    let stage = Stage::load(Path::new("test.stage"))?;
+    let stage = Stage::load(Path::new("game.stage"))?;
 
     let border = Border;
-    let mut player = Player::new();
-    player.pos.x = width as Coord / 2.0;
+    let mut player = Player::new(Pos::new(13.0, 102.0));
 
     // use spin_sleep since native sleep is often too slow / low res
     let mut loop_helper = spin_sleep::LoopHelper::builder()

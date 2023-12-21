@@ -48,13 +48,10 @@ impl Chain {
                 }
             }
             State::Retracting => {
-                let num_links_in =
-                    self.start_time.elapsed().as_secs_f64() / LINK_TIME.as_secs_f64();
-                let num_links_in = (num_links_in as usize).min(self.links.len());
-                self.num_links_out = self.links.len() - num_links_in;
-
                 if self.num_links_out == 0 {
                     self.state = State::Retracted;
+                } else if self.start_time.elapsed() >= LINK_TIME {
+                    self.num_links_out -= 1;
                 }
             }
             _ => (),

@@ -21,7 +21,7 @@ impl From<char> for Tile {
             ' ' => Self::Nothing,
             'z' => Self::Spring,
             '◀' | '▶' | '▲' | '▼' => Self::Spike,
-            '◈' => Self::Checkpoint,
+            '*' => Self::Checkpoint,
             _ => Self::Something,
         }
     }

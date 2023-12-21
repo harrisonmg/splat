@@ -6,12 +6,13 @@ use crate::engine::{
 
 use super::{Chain, Stage, Tile, DELTA_TIME};
 
-pub const GRAVITY: Coord = 100.0;
+pub const GRAVITY: Coord = 120.0;
 pub const AIR_DRAG: Coord = 0.01;
-pub const SWING_KICK: Coord = 30.0;
+pub const SWING_KICK: Coord = 50.0;
 pub const SPRING_KICK: Coord = 1.2;
 pub const MIN_SPRING_VEL: Coord = 50.0;
 pub const JUMP_VEL: Coord = 60.0;
+pub const MAX_ROPE_LEN: usize = 100;
 
 pub struct Player {
     pub pos: Pos,
@@ -25,7 +26,7 @@ pub struct Player {
 
 impl Player {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(starting_pos: Pos) -> Self {
         let mut death_anim = Animation::new(
             vec![
                 vec![
@@ -51,7 +52,7 @@ impl Player {
         death_anim.pause();
 
         Self {
-            pos: Pos::ZERO,
+            pos: starting_pos,
             vel: Pos::ZERO,
             chain: Chain::new(Ray {
                 start: Pos::ZERO,
@@ -60,12 +61,13 @@ impl Player {
             stuck: true,
             death_anim,
             death_anim_offset: ScreenPos::new(-1, -1).into(),
-            checkpoint: Pos::ZERO,
+            checkpoint: starting_pos,
         }
     }
 
     pub fn update(&mut self, input: &Input, stage: &Stage) {
-        self.death();
+        self.teleport(input);
+        self.death(input);
         self.jump(input);
         self.chain_throw(input, stage);
         let new_pos = self.kinematics();
@@ -73,16 +75,24 @@ impl Player {
         self.chain.ray.start = self.pos;
     }
 
-    fn death(&mut self) {
+    fn teleport(&mut self, input: &Input) {
+        if cfg!(debug_assertions) && input.pressed_this_frame(Button::Space) {
+            self.pos = input.mouse_pos;
+            self.vel = Pos::ZERO;
+            self.stuck = true;
+        }
+    }
+
+    fn death(&mut self, input: &Input) {
         self.death_anim.update();
-        if self.death_anim.done() {
+        if self.death_anim.done() || input.pressed_this_frame(Button::Reset) {
             self.pos = self.checkpoint;
             self.vel = Pos::ZERO;
             self.chain = Chain::new(Ray {
                 start: Pos::ZERO,
                 end: Pos::ZERO,
             });
-            self.stuck = true;
+            self.stuck = false;
             self.death_anim.reset();
             self.death_anim.pause();
         }
@@ -98,19 +108,17 @@ impl Player {
 
     fn chain_throw(&mut self, input: &Input, stage: &Stage) {
         if input.pressed_this_frame(Button::LeftMouse) && self.pos != input.mouse_pos {
-            let mut ray = InifiniteRay::new(self.pos, input.mouse_pos - self.pos);
-            if let Some(pos) = ray.next() {
-                let mut end = pos;
-                for pos in ray {
-                    if !matches!(stage.check_pos(pos), Tile::Nothing) {
-                        break;
-                    } else {
-                        end = pos
-                    }
+            let ray = InifiniteRay::new(self.pos, input.mouse_pos - self.pos);
+            for pos in ray.take(MAX_ROPE_LEN) {
+                if !matches!(
+                    stage.check_pos(pos),
+                    Tile::Nothing | Tile::OutOfBounds | Tile::Checkpoint
+                ) {
+                    self.stuck = false;
+                    self.chain.ray.end = pos;
+                    self.chain.deploy();
+                    break;
                 }
-                self.stuck = false;
-                self.chain.ray.end = end;
-                self.chain.deploy();
             }
         } else if input.released_this_frame(Button::LeftMouse) {
             self.chain.retract();
