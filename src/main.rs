@@ -5,7 +5,7 @@ use std::path::Path;
 use crossterm::terminal;
 
 use engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use game::{Border, Player, Stage, UPDATE_RATE};
+use game::{Bear, Border, Player, Stage, UPDATE_RATE};
 
 mod engine;
 mod game;
@@ -31,6 +31,8 @@ fn main() -> std::io::Result<()> {
 
     let border = Border;
     let mut player = Player::new(Pos::new(13.0, 102.0));
+    let mut left_bear = Bear::new(Pos::new(373.0, 756.0));
+    let mut right_bear = Bear::new(Pos::new(450.0, 756.0));
 
     // use spin_sleep since native sleep is often too slow / low res
     let mut loop_helper = spin_sleep::LoopHelper::builder()
@@ -52,12 +54,16 @@ fn main() -> std::io::Result<()> {
         }
 
         player.update(&input, &stage);
+        left_bear.update();
+        right_bear.update();
         camera.update(&player);
 
         renderer.clear();
 
         stage.draw(&camera, &mut renderer);
         player.draw(&camera, &mut renderer);
+        left_bear.draw(&camera, &mut renderer);
+        right_bear.draw(&camera, &mut renderer);
         border.draw(&camera, &mut renderer);
 
         renderer.render()?;

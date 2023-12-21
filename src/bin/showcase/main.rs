@@ -1,11 +1,9 @@
-use bear::Bear;
 use crossterm::terminal;
 
 use splat::engine::{Button, Camera, Drawable, Input, Logger, Pos, Renderer, ScreenPos};
-use splat::game::{Border, UPDATE_RATE};
+use splat::game::{Bear, Border, UPDATE_RATE};
 use ui_button::UiButtons;
 
-mod bear;
 mod ui_button;
 
 fn main() -> std::io::Result<()> {
@@ -37,7 +35,7 @@ fn main() -> std::io::Result<()> {
 
     let mut ui_buttons = UiButtons::new();
 
-    let mut bear = Bear::new();
+    let mut bear = Bear::new(Pos::new(-50.0, 20.0));
 
     // use spin_sleep since native sleep is often too slow / low res
     let mut loop_helper = spin_sleep::LoopHelper::builder()
