@@ -14,7 +14,6 @@ mod chain;
 pub use chain::*;
 
 mod follow_cam;
-pub use follow_cam::*;
 
 mod bear;
 pub use bear::*;
